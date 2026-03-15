@@ -1,19 +1,78 @@
-use std::str::FromStr;
+use std::io::IsTerminal;
 
 use async_compression::tokio::bufread::ZstdEncoder;
-use harmonia_store_core::store_path::StorePath;
+use centaurus::{
+  error::{ErrorReportExt, Result},
+  init::logging::init_logging,
+};
+use clap::Parser;
+use harmonia_store_core::store_path::{StoreDir, StorePath};
 use harmonia_store_remote::{DaemonClient, DaemonStore};
 use tokio::{fs::File, io};
 
-#[tokio::main]
-async fn main() {
-  println!("Hello, world!");
+use crate::{
+  cli::{Cli, Commands},
+  config::Config,
+};
 
-  let path = "/nix/store/hlxw2q9qansq7bn52xvlb5badw3z1v8s-coreutils-9.10";
-  let base_path = "/nix/store/";
+mod auth;
+mod cli;
+mod config;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+  let level = config::log_level();
+  init_logging(level);
+
+  let cli = Cli::parse();
+  let config = Config::load(cli.config.clone())
+    .await
+    .context("Failed to load config")?;
+
+  let tty = std::io::stdin().is_terminal();
+  let url = cli
+    .url
+    .or_else(|| config.as_ref().map(|c| c.app_url.clone()));
+
+  match cli.command {
+    Commands::SetUrl { url } => {
+      let mut config = config.unwrap_or_else(|| Config::new(url.clone(), None));
+      config.app_url = url;
+      config
+        .save(cli.config)
+        .await
+        .context("Failed to save config")?;
+    }
+    Commands::Auth { token } => {
+      let Some(url) = url else {
+        eprintln!(
+          "No URL specified. Please provide a URL using --url or set it using the set-url command."
+        );
+        return Ok(());
+      };
+
+      if let Some(token) = token {
+        let mut config = config.unwrap_or_else(|| Config::new(url.clone(), Some(token.clone())));
+        config.token = Some(token);
+        config
+          .save(cli.config)
+          .await
+          .context("Failed to save config")?;
+        println!("Token saved successfully.");
+      }
+    }
+  }
+
+  Ok(())
+}
+
+async fn test() {
+  let store_dir = StoreDir::default();
+  let path: StorePath = store_dir
+    .parse("/nix/store/hlxw2q9qansq7bn52xvlb5badw3z1v8s-coreutils-9.10")
+    .unwrap();
 
   let mut conn = DaemonClient::builder().connect_daemon().await.unwrap();
-  let path = StorePath::from_str(path.strip_prefix(base_path).unwrap()).unwrap();
   let info = conn.query_path_info(&path).await.unwrap().unwrap();
 
   println!("Daemon info: {:?}", info);
