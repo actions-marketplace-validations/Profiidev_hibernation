@@ -27,6 +27,7 @@ pub struct JwtClaims {
   pub exp: i64,
   pub iss: String,
   pub sub: Uuid,
+  pub cli: bool,
 }
 
 #[derive(Clone, FromRequestParts)]
@@ -41,7 +42,7 @@ pub struct JwtState {
 }
 
 impl JwtState {
-  pub fn create_token<'c>(&self, uuid: Uuid) -> Result<Cookie<'c>> {
+  pub fn create_token<'c>(&self, uuid: Uuid, cli: bool) -> Result<Cookie<'c>> {
     let exp = Utc::now()
       .checked_add_signed(Duration::seconds(self.exp))
       .ok_or(Error::from(ErrorKind::ExpiredSignature))?
@@ -51,6 +52,7 @@ impl JwtState {
       exp,
       iss: self.iss.clone(),
       sub: uuid,
+      cli,
     };
 
     let token = encode(&self.header, &claims, &self.encoding_key)?;

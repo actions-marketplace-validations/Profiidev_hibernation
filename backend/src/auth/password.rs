@@ -52,7 +52,7 @@ async fn authenticate(
     bail!(UNAUTHORIZED, "Invalid email or password");
   }
 
-  let cookie = jwt.create_token(user.id)?;
+  let cookie = jwt.create_token(user.id, false)?;
   cookies = cookies.add(cookie);
   debug!("User logged in: {}", user.id);
 
