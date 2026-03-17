@@ -10,6 +10,8 @@ use tokio::task::JoinHandle;
 use tokio::time::sleep;
 use url::Url;
 
+use crate::api::ApiClient;
+
 pub struct CodeServer {
   receiver: oneshot::Receiver<Option<String>>,
   task: JoinHandle<()>,
@@ -17,7 +19,7 @@ pub struct CodeServer {
 
 impl CodeServer {
   pub async fn new(app_url: Url) -> Result<Self> {
-    let listener = TcpListener::bind(("127.0.0.1", 16406)).await?;
+    let listener = TcpListener::bind(("0.0.0.0", 16401)).await?;
     let (sender, receiver) = oneshot::channel();
 
     let task = spawn(async {
@@ -41,8 +43,8 @@ impl CodeServer {
     self.task.abort();
   }
 
-  pub fn get_code(&mut self) -> Option<String> {
-    self.receiver.try_recv().ok().flatten()
+  pub async fn wait_for_code(&mut self) -> Option<String> {
+    (&mut self.receiver).await.ok().flatten()
   }
 }
 
@@ -97,14 +99,8 @@ async fn get_token(request_line: String, app_url: Url) -> Result<String> {
     .find(|(k, _)| k == "code")
     .map(|(_, v)| v.into_owned())
     .context("Code not found in query parameters")?;
-  let user = url
-    .query_pairs()
-    .find(|(k, _)| k == "user")
-    .map(|(_, v)| v.into_owned())
-    .context("User not found in query parameters")?;
 
-  let mut api = ApiClient::new(app_url, None).await?;
-  let token = api.request_token(&code, &user).await?;
+  let token = ApiClient::request_token(app_url, &code).await?;
 
   Ok(token)
 }

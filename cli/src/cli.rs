@@ -28,4 +28,5 @@ pub enum Commands {
     /// The token to use for authentication
     token: Option<String>,
   },
+  Test,
 }
