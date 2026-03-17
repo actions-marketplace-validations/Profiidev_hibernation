@@ -38,8 +38,4 @@
   };
 </script>
 
-<MultiStepForm
-  {stages}
-  onsubmit={submit}
-  cancelHref="/tokens"
-/>
+<MultiStepForm {stages} onsubmit={submit} cancelHref="/tokens" />
