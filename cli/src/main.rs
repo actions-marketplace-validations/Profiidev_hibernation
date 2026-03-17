@@ -78,14 +78,14 @@ async fn main() -> Result<()> {
 }
 
 async fn handle_command(
-  cmd: &Commands,
+  _cmd: &Commands,
   config: Option<Config>,
   url: Option<Url>,
   config_path: Option<PathBuf>,
 ) {
   let tty = std::io::stdin().is_terminal();
 
-  let client = if let Some(config) = &config
+  let _client = if let Some(config) = &config
     && let Some(token) = &config.token
   {
     ApiClient::new(token.clone(), url.unwrap_or(config.app_url.clone()))
