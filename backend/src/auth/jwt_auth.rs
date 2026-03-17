@@ -84,7 +84,7 @@ impl<S: Sync, P: Permission, T: TokenType> FromRequestParts<S> for JwtAuth<P, T>
   }
 }
 
-impl<S: Sync> OptionalFromRequestParts<S> for JwtAuth {
+impl<S: Sync, P: Permission, T: TokenType> OptionalFromRequestParts<S> for JwtAuth<P, T> {
   type Rejection = ErrorReport;
 
   async fn from_request_parts(

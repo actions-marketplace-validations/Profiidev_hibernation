@@ -1,9 +1,12 @@
 use axum::{Json, Router, routing::get};
 use axum_extra::extract::CookieJar;
 
-use crate::auth::{
-  jwt_auth::JwtAuth,
-  jwt_state::{JWT_COOKIE_NAME, JwtState},
+use crate::{
+  auth::{
+    jwt_auth::{CliToken, JwtAuth},
+    jwt_state::{JWT_COOKIE_NAME, JwtState},
+  },
+  permissions::NoPerm,
 };
 
 pub fn router() -> Router {
@@ -11,7 +14,7 @@ pub fn router() -> Router {
 }
 
 async fn test_token(
-  auth: Option<JwtAuth>,
+  auth: Option<JwtAuth<NoPerm, CliToken>>,
   mut cookies: CookieJar,
   jwt: JwtState,
 ) -> (CookieJar, Json<bool>) {
