@@ -1,0 +1,64 @@
+name: 'Cli Release'
+
+on:
+  release:
+    types:
+      - published
+  pull_request:
+
+jobs:
+  release-artifacts:
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        name:
+          - linux-x86-64-gnu
+          - linux-x86-64-musl
+          - linux-arm64-gnu
+          - linux-arm64-musl
+          - windows-x86-64
+          - windows-arm64
+          - macos-x86-64
+          - macos-arm64
+        include:
+          - name: linux-x86-64-gnu
+            target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - name: linux-x86-64-musl
+            target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+          - name: linux-arm64-gnu
+            target: aarch64-unknown-linux-gnu
+            os: ubuntu-24.04-arm
+          - name: linux-arm64-musl
+            target: aarch64-unknown-linux-musl
+            os: ubuntu-24.04-arm
+          - name: windows-x86-64
+            target: x86_64-pc-windows-msvc
+            os: windows-latest
+          - name: windows-arm64
+            target: aarch64-pc-windows-msvc
+            os: windows-latest
+          - name: macos-x86-64
+            target: x86_64-apple-darwin
+            os: macos-latest
+          - name: macos-arm64
+            target: aarch64-apple-darwin
+            os: macos-latest
+    name: Build and Release Cli for ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Cache cargo and rust files
+        id: rust_cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          shared-key: 'cli_release_cache-${{ matrix.name }}'
+      - name: Build Cli
+        run: cargo build --release --target ${{ matrix.target }}
