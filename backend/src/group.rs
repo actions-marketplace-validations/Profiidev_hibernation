@@ -82,7 +82,9 @@ async fn create_group(
   }
 
   let group_id = db.group().create_group(data.name).await?;
-  updater.broadcast(UpdateMessage::Groups).await;
+  updater
+    .broadcast(UpdateMessage::Group { uuid: group_id })
+    .await;
 
   Ok(Json(GroupCreateResponse { uuid: group_id }))
 }
@@ -106,7 +108,9 @@ async fn delete_group(
   }
 
   db.group().delete_group(data.uuid).await?;
-  updater.broadcast(UpdateMessage::Groups).await;
+  updater
+    .broadcast(UpdateMessage::Group { uuid: data.uuid })
+    .await;
 
   Ok(())
 }
@@ -167,7 +171,9 @@ async fn edit_group(
   db.group()
     .edit_group(data.uuid, data.name, data.permissions, data.users)
     .await?;
-  updater.broadcast(UpdateMessage::Groups).await;
+  updater
+    .broadcast(UpdateMessage::Group { uuid: data.uuid })
+    .await;
 
   Ok(())
 }
