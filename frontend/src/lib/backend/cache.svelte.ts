@@ -1,4 +1,4 @@
-import { get, post, ResponseType } from 'positron-components/backend';
+import { delete_, get, post, ResponseType } from 'positron-components/backend';
 
 export interface CacheInfo {
   uuid: string;
@@ -57,5 +57,15 @@ export const createCache = async (data: CreateCacheRequest) => {
   return await post<CreateCacheResponse>('/api/cache/management', {
     body: data,
     res_type: ResponseType.Json
+  });
+};
+
+export interface DeleteCacheRequest {
+  uuid: string;
+}
+
+export const deleteCache = async (data: DeleteCacheRequest) => {
+  return await delete_(`/api/cache/management`, {
+    body: data
   });
 };

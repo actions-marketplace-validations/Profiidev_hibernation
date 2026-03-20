@@ -7,6 +7,8 @@ pub fn permissions() -> Vec<&'static str> {
     UserView::name(),
     UserEdit::name(),
     CacheCreate::name(),
+    CacheView::name(),
+    CacheEdit::name(),
   ]
 }
 
@@ -43,3 +45,5 @@ permission!(UserEdit, "user:edit");
 
 // Caches
 permission!(CacheCreate, "cache:create");
+permission!(CacheView, "cache:view");
+permission!(CacheEdit, "cache:edit");

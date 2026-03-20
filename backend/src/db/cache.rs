@@ -1,10 +1,11 @@
+use centaurus::bail;
 use entity::{cache, cache_access, group_user, nar_info, sea_orm_active_enums::AccessType};
 use sea_orm::{
   ActiveValue::Set, Condition, FromQueryResult, Iterable, JoinType, QuerySelect, prelude::*,
 };
 use serde::Serialize;
 
-use crate::db::setup::SetupTable;
+use crate::{db::group::GroupTable, permissions::Permission};
 
 #[derive(Serialize, FromQueryResult)]
 pub struct CacheInfo {
@@ -119,15 +120,13 @@ impl<'db> CacheTable<'db> {
     Ok(res.id)
   }
 
-  pub async fn delete_cache(&self, uuid: Uuid) -> Result<(), DbErr> {
+  pub async fn delete_cache(&self, uuid: Uuid, user: Uuid) -> centaurus::error::Result<()> {
     if self
-      .by_id_filtered(uuid, Uuid::nil(), AccessType::Edit)
+      .by_id_filtered(uuid, user, AccessType::Edit)
       .await?
       .is_none()
     {
-      return Err(DbErr::Custom(
-        "Cache not found or insufficient permissions".to_string(),
-      ));
+      bail!(NOT_FOUND, "Cache not found or insufficient permissions");
     }
 
     cache::Entity::delete_by_id(uuid).exec(self.db).await?;
@@ -150,32 +149,39 @@ async fn apply_user_filter<Q: QueryFilter>(
   user: Uuid,
   access_type: AccessType,
 ) -> Result<Q, DbErr> {
-  let group_ids = group_user::Entity::find()
-    .filter(group_user::Column::UserId.eq(user))
-    .select_only()
-    .column_as(group_user::Column::GroupId, QueryAs::GroupId)
-    .into_values::<Uuid, QueryAs>()
-    .all(db)
+  let permission = match access_type {
+    AccessType::View => crate::permissions::CacheView::name(),
+    AccessType::Edit => crate::permissions::CacheEdit::name(),
+  };
+
+  let hash_general_permission = GroupTable::new(db)
+    .user_hash_permissions(user, permission)
     .await?;
 
-  // hash all access
-  let admin_group = SetupTable::new(db).get_admin_group_id().await?;
-  if !admin_group.is_some_and(|id| group_ids.contains(&id)) {
+  if !hash_general_permission {
+    // If the user doesn't have the general permission, they must have specific access to the cache
+    let group_ids = group_user::Entity::find()
+      .filter(group_user::Column::UserId.eq(user))
+      .select_only()
+      .column_as(group_user::Column::GroupId, QueryAs::GroupId)
+      .into_values::<Uuid, QueryAs>()
+      .all(db)
+      .await?;
+
     let mut user_cond = cache_access::Column::UserId.eq(user);
     let mut group_cond = cache_access::Column::GroupId.is_in(group_ids);
+    let mut cond = Condition::any();
 
     // if only read access is requested, also include entries with edit access
     if access_type == AccessType::Edit {
       user_cond = user_cond.and(cache_access::Column::AccessType.eq(AccessType::Edit));
       group_cond = group_cond.and(cache_access::Column::AccessType.eq(AccessType::Edit));
+    } else {
+      // Only allow public caches if read access is sufficient. write requires explicit permissions
+      cond = cond.add(cache::Column::Public.eq(true))
     }
 
-    query = query.filter(
-      Condition::any()
-        .add(user_cond)
-        .add(group_cond)
-        .add(cache::Column::Public.eq(true)),
-    );
+    query = query.filter(cond.add(user_cond).add(group_cond));
   };
 
   Ok(query)

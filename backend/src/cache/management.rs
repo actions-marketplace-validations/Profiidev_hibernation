@@ -77,7 +77,13 @@ async fn create_cache(
   Ok(Json(CreateCacheResponse { uuid }))
 }
 
-async fn delete_cache(auth: JwtAuth, db: Connection) -> Result<()> {
-  db.cache().delete_cache(auth.user_id).await?;
+#[derive(Deserialize, FromRequest)]
+#[from_request(via(Json))]
+struct DeleteCacheRequest {
+  uuid: Uuid,
+}
+
+async fn delete_cache(auth: JwtAuth, db: Connection, req: DeleteCacheRequest) -> Result<()> {
+  db.cache().delete_cache(req.uuid, auth.user_id).await?;
   Ok(())
 }
