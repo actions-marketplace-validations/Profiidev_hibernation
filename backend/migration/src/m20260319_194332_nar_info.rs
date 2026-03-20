@@ -64,10 +64,10 @@ impl MigrationTrait for Migration {
 
   async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
     manager
-      .drop_table(Table::drop().table(NarInfo::Table).to_owned())
+      .drop_table(Table::drop().table(NarInfoReference::Table).to_owned())
       .await?;
     manager
-      .drop_table(Table::drop().table(NarInfoReference::Table).to_owned())
+      .drop_table(Table::drop().table(NarInfo::Table).to_owned())
       .await
   }
 }

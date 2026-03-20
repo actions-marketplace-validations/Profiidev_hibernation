@@ -35,11 +35,11 @@ struct CachePath {
 }
 
 async fn cache_details(
-  _auth: JwtAuth,
+  auth: JwtAuth,
   path: CachePath,
   db: Connection,
 ) -> Result<Json<CacheDetails>> {
-  let Some(details) = db.cache().cache_details(path.uuid).await? else {
+  let Some(details) = db.cache().cache_details(path.uuid, auth.user_id).await? else {
     bail!(NOT_FOUND, "Cache not found");
   };
 
@@ -77,6 +77,7 @@ async fn create_cache(
   Ok(Json(CreateCacheResponse { uuid }))
 }
 
-async fn delete_cache(_auth: JwtAuth, db: Connection) -> Result<()> {
-  unimplemented!()
+async fn delete_cache(auth: JwtAuth, db: Connection) -> Result<()> {
+  db.cache().delete_cache(auth.user_id).await?;
+  Ok(())
 }

@@ -79,9 +79,9 @@ impl MigrationTrait for Migration {
     manager
       .drop_table(
         Table::drop()
-          .table(Group::Table)
-          .table(GroupUser::Table)
           .table(GroupPermission::Table)
+          .table(GroupUser::Table)
+          .table(Group::Table)
           .to_owned(),
       )
       .await
@@ -89,7 +89,7 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(DeriveIden)]
-enum Group {
+pub enum Group {
   Table,
   Id,
   Name,
