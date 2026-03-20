@@ -61,7 +61,7 @@ struct CreateCacheResponse {
 }
 
 async fn create_cache(
-  _auth: JwtAuth<CacheCreate>,
+  auth: JwtAuth<CacheCreate>,
   db: Connection,
   req: CreateCacheRequest,
 ) -> Result<Json<CreateCacheResponse>> {
@@ -71,7 +71,7 @@ async fn create_cache(
 
   let uuid = db
     .cache()
-    .create_cache(req.name, req.public, req.quota, req.sig_key)
+    .create_cache(req.name, req.public, req.quota, req.sig_key, auth.user_id)
     .await?;
 
   Ok(Json(CreateCacheResponse { uuid }))

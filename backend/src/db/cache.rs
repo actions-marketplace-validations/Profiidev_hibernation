@@ -107,6 +107,7 @@ impl<'db> CacheTable<'db> {
     public: bool,
     quota: i64,
     sig_key: String,
+    user: Uuid,
   ) -> Result<Uuid, DbErr> {
     let cache = cache::ActiveModel {
       id: Set(Uuid::new_v4()),
@@ -117,6 +118,16 @@ impl<'db> CacheTable<'db> {
       priority: Set(50),
     };
     let res = cache.insert(self.db).await?;
+
+    let cache_access = cache_access::ActiveModel {
+      cache_id: Set(res.id),
+      user_id: Set(Some(user)),
+      group_id: Set(None),
+      access_type: Set(AccessType::Edit),
+      ..Default::default()
+    };
+    cache_access.insert(self.db).await?;
+
     Ok(res.id)
   }
 
