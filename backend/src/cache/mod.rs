@@ -3,8 +3,12 @@ use centaurus::error::Result;
 
 use crate::auth::cli_auth::CliAuth;
 
+mod management;
+
 pub fn router() -> Router {
-  Router::new().route("/test", get(test))
+  Router::new()
+    .nest("/management", management::router())
+    .route("/test", get(test))
 }
 
 async fn test(auth: CliAuth) -> Result<String> {

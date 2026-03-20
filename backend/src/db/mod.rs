@@ -2,6 +2,7 @@ use centaurus::db::init::Connection;
 use centaurus::error::Result;
 use sea_orm::{ConnectionTrait, DatabaseBackend, Statement};
 
+use crate::db::cache::CacheTable;
 use crate::db::group::GroupTable;
 use crate::db::invalid_jwt::InvalidJwtTable;
 use crate::db::key::KeyTable;
@@ -10,6 +11,7 @@ use crate::db::setup::SetupTable;
 use crate::db::token::TokenTable;
 use crate::db::user::UserTable;
 
+pub mod cache;
 pub mod group;
 pub mod invalid_jwt;
 pub mod key;
@@ -26,6 +28,7 @@ pub trait DBTrait {
   fn user(&self) -> UserTable<'_>;
   fn settings(&self) -> SettingsTable<'_>;
   fn token(&self) -> TokenTable<'_>;
+  fn cache(&self) -> CacheTable<'_>;
 }
 
 impl DBTrait for Connection {
@@ -55,6 +58,10 @@ impl DBTrait for Connection {
 
   fn token(&self) -> TokenTable<'_> {
     TokenTable::new(self)
+  }
+
+  fn cache(&self) -> CacheTable<'_> {
+    CacheTable::new(self)
   }
 }
 

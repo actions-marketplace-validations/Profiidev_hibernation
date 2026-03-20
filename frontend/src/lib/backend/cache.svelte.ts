@@ -1,7 +1,7 @@
 import { get, post, ResponseType } from 'positron-components/backend';
 
 export interface CacheInfo {
-  id: string;
+  uuid: string;
   name: string;
   size: number;
   quota: number;
@@ -9,7 +9,7 @@ export interface CacheInfo {
 }
 
 export const listCaches = async (fetch: typeof window.fetch = window.fetch) => {
-  let ret = await get<CacheInfo[]>('/api/cache', {
+  let ret = await get<CacheInfo[]>('/api/cache/management', {
     res_type: ResponseType.Json,
     fetch
   });
@@ -19,11 +19,16 @@ export const listCaches = async (fetch: typeof window.fetch = window.fetch) => {
   }
 };
 
-export const getCacheInfo = async (
+export type CacheDetails = CacheInfo & {
+  sig_key: string;
+  priority: number;
+};
+
+export const getCacheDetails = async (
   uuid: string,
   fetch: typeof window.fetch = window.fetch
 ) => {
-  let ret = await get<CacheInfo>(`/api/cache/${uuid}`, {
+  let ret = await get<CacheDetails>(`/api/cache/management/${uuid}`, {
     res_type: ResponseType.Json,
     fetch
   });
@@ -49,7 +54,7 @@ export interface CreateCacheResponse {
 }
 
 export const createCache = async (data: CreateCacheRequest) => {
-  return await post<CreateCacheResponse>('/api/cache', {
+  return await post<CreateCacheResponse>('/api/cache/management', {
     body: data,
     res_type: ResponseType.Json
   });

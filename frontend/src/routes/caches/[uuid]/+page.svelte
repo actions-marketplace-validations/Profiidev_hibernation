@@ -2,11 +2,8 @@
   import { Separator } from 'positron-components/components/ui/separator';
   import { Button } from 'positron-components/components/ui/button';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-  import Trash from '@lucide/svelte/icons/trash';
 
   const { data } = $props();
-
-  let token = $state<string>();
 </script>
 
 <div class="flex h-full w-full flex-col space-y-6 p-4">
@@ -15,14 +12,6 @@
       <ArrowLeft class="size-5" />
     </Button>
     <h3 class="text-xl font-medium">Cache: {data.cacheInfo.name}</h3>
-    <Button
-      class="ml-auto cursor-pointer"
-      onclick={() => console.log('123')}
-      variant="destructive"
-    >
-      <Trash />
-      Delete
-    </Button>
   </div>
   <Separator class="my-4" />
   <div

@@ -43,6 +43,11 @@
     <div
       class="grid size-full auto-rows-min grid-cols-[repeat(auto-fill,minmax(24rem,1fr))] gap-2"
     >
+      {#if (data.caches?.length ?? 0) === 0}
+        <p class="text-muted-foreground">
+          No caches found. Create one to get started.
+        </p>
+      {/if}
       {#each data.caches as cache}
         {@const size_gib = size_to_gib(cache.size)}
         {@const quota_gib = size_to_gib(cache.quota)}
@@ -50,6 +55,7 @@
         <Button
           class="flex h-24 w-full max-w-150 cursor-pointer flex-col items-start rounded-xl border p-2"
           variant="outline"
+          href={'/caches/' + cache.uuid}
         >
           <div class="flex w-full items-center">
             <h4 class="text-xl font-medium">{cache.name}</h4>

@@ -10,6 +10,7 @@ pub struct Model {
   pub name: String,
   pub priority: i32,
   pub public: bool,
+  pub quota: i64,
   pub public_signing_key: String,
 }
 

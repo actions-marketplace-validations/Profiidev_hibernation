@@ -1,10 +1,10 @@
 import { RequestError } from 'positron-components/backend';
 import type { PageLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { getCacheInfo } from '$lib/backend/cache.svelte';
+import { getCacheDetails } from '$lib/backend/cache.svelte';
 
 export const load: PageLoad = async ({ params, fetch }) => {
-  let res = await getCacheInfo(params.uuid, fetch);
+  let res = await getCacheDetails(params.uuid, fetch);
 
   if (typeof res !== 'object') {
     if (res === RequestError.NotFound) {
