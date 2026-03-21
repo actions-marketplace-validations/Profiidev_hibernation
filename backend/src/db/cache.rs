@@ -32,6 +32,13 @@ pub struct CacheDetails {
   priority: i32,
 }
 
+#[derive(Serialize, FromQueryResult)]
+pub struct SimpleCacheInfo {
+  #[serde(rename = "uuid")]
+  id: Uuid,
+  name: String,
+}
+
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
 enum QueryAs {
   GroupId,
@@ -59,6 +66,21 @@ impl<'db> CacheTable<'db> {
       .columns(cache::Column::iter())
       .column_as(nar_info::Column::FileSize.sum(), "size")
       .into_model::<CacheInfo>()
+      .all(self.db)
+      .await
+  }
+
+  pub async fn list_caches_simple(&self, user: Uuid) -> Result<Vec<SimpleCacheInfo>, DbErr> {
+    let mut query =
+      cache::Entity::find().join(JoinType::LeftJoin, cache::Relation::CacheAccess.def());
+
+    query = apply_user_filter(query, self.db, user, AccessType::View).await?;
+
+    query
+      .select_only()
+      .column(cache::Column::Id)
+      .column(cache::Column::Name)
+      .into_model::<SimpleCacheInfo>()
       .all(self.db)
       .await
   }

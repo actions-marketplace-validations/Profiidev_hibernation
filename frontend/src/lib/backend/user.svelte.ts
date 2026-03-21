@@ -8,6 +8,7 @@ import {
   ResponseType
 } from 'positron-components/backend';
 import { fetchKey, getEncrypt } from './auth.svelte';
+import type { CacheMapping } from './groups.svelte';
 
 export interface UserInfo {
   uuid: string;
@@ -15,6 +16,7 @@ export interface UserInfo {
   email: string;
   permissions: Permission[];
   avatar?: string;
+  caches: CacheMapping[];
 }
 
 export const getUserInfo = async (
