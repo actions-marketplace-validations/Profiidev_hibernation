@@ -282,4 +282,38 @@ impl<'db> UserTable<'db> {
 
     Ok(())
   }
+
+  pub async fn update_cache_mappings(
+    &self,
+    user: Uuid,
+    old_mappings: Vec<CacheMapping>,
+    new_mappings: Vec<CacheMapping>,
+  ) -> Result<(), DbErr> {
+    // Delete old mappings
+    let cache_ids_to_delete: Vec<Uuid> = old_mappings.iter().map(|m| m.uuid).collect();
+    cache_access::Entity::delete_many()
+      .filter(cache_access::Column::UserId.eq(user))
+      .filter(cache_access::Column::CacheId.is_in(cache_ids_to_delete))
+      .exec(self.db)
+      .await?;
+
+    // Insert new mappings
+    let mut models = Vec::new();
+    for mapping in new_mappings {
+      let model = cache_access::ActiveModel {
+        user_id: Set(Some(user)),
+        cache_id: Set(mapping.uuid),
+        access_type: Set(mapping.access_type),
+        ..Default::default()
+      }
+      .into_active_model();
+      models.push(model);
+    }
+
+    cache_access::Entity::insert_many(models)
+      .exec(self.db)
+      .await?;
+
+    Ok(())
+  }
 }

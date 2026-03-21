@@ -116,7 +116,7 @@
                 bind:mappings
                 disabled={!data.user?.permissions.includes(
                   Permission.CACHE_EDIT
-                )}
+                ) || isLoading}
               />
             </div>
           </div>

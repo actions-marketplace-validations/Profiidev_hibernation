@@ -2,8 +2,9 @@
 
 ## TODO
 
-- user cache access settings
 - token permissions
+- cache settings page
+- updater websocket message correction
 - cache pushing
 - cache eviction settings
 - cache files cleanup job + don't delete entries in nar table when no narinfo points to them
