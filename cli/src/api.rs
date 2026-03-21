@@ -1,9 +1,8 @@
 use std::{io::IsTerminal, path::PathBuf};
 
 use centaurus::{error::Result, eyre::Context};
-use harmonia_protocol::store_path::StorePath;
 use reqwest::{Client, Method, RequestBuilder, Response};
-use shared::HIBERNATION_VERSION_HEADER;
+use shared::{HIBERNATION_VERSION_HEADER, api::push::UploadInfoResponse};
 use tracing::{error, warn};
 use url::Url;
 
@@ -15,12 +14,11 @@ pub struct ApiClient {
   url: Url,
 }
 
-#[derive(Debug)]
 pub enum PushInfoResult {
   CacheNotFound,
   ForcePushNotAllowed,
   AllPathsExist,
-  Paths(Vec<StorePath>),
+  Success(UploadInfoResponse),
 }
 
 impl ApiClient {
@@ -139,11 +137,11 @@ impl ApiClient {
       reqwest::StatusCode::NOT_ACCEPTABLE => Ok(PushInfoResult::ForcePushNotAllowed),
       reqwest::StatusCode::NO_CONTENT => Ok(PushInfoResult::AllPathsExist),
       _ => {
-        let paths: Vec<StorePath> = res
+        let res: UploadInfoResponse = res
           .json()
           .await
           .context("Failed to parse push info response")?;
-        Ok(PushInfoResult::Paths(paths))
+        Ok(PushInfoResult::Success(res))
       }
     }
   }

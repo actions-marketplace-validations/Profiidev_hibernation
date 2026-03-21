@@ -65,25 +65,25 @@ pub async fn push_paths(
   info!("Checking which paths are missing on the server");
   let res = api.push_info(cache, paths, force).await.unwrap();
 
-  let paths = match res {
-    PushInfoResult::Paths(paths) => paths,
+  let res = match res {
+    PushInfoResult::Success(res) => res,
     PushInfoResult::AllPathsExist => {
-      warn!("All paths already exist on the server, nothing to push");
+      warn!("All paths already exist on the server, nothing to push.");
       std::process::exit(0);
     }
     PushInfoResult::CacheNotFound => {
-      error!("Cache not found on the server");
+      error!("Cache not found on the server.");
       std::process::exit(1);
     }
     PushInfoResult::ForcePushNotAllowed => {
-      error!("Force push not allowed by the cache");
+      warn!("Force push not allowed by the cache.");
       std::process::exit(1);
     }
   };
 
   let path_infos = path_infos
     .into_iter()
-    .filter(|info| paths.contains(&info.store_path))
+    .filter(|info| res.paths.contains(&info.store_path))
     .collect::<Vec<_>>();
 
   info!("Pushing {} paths to the server", path_infos.len());

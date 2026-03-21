@@ -471,6 +471,7 @@ name = "backend"
 version = "0.0.1"
 dependencies = [
  "argon2",
+ "async-compression",
  "async-trait",
  "axum",
  "axum-extra",
@@ -499,6 +500,7 @@ dependencies = [
  "sea-orm",
  "serde",
  "serde_json",
+ "sha2",
  "shared",
  "time",
  "tokio",
@@ -4387,6 +4389,12 @@ dependencies = [
 [[package]]
 name = "shared"
 version = "0.1.0"
+dependencies = [
+ "harmonia-store-core",
+ "serde",
+ "tokio",
+ "uuid",
+]
 
 [[package]]
 name = "shlex"

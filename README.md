@@ -3,6 +3,7 @@
 ## TODO
 
 - cache pushing
+- cache push signature validation + add signatures on push
 - cache eviction settings
 - cache files cleanup job + don't delete entries in nar table when no narinfo points to them
 - cache settings page

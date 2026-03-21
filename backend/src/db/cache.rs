@@ -1,6 +1,7 @@
 use centaurus::bail;
 use entity::{
-  cache, cache_access, downstream_cache, group_user, nar_info, sea_orm_active_enums::AccessType,
+  cache, cache_access, downstream_cache, group_user, nar, nar_info, nar_info_reference,
+  sea_orm_active_enums::AccessType,
 };
 use harmonia_store_core::store_path::StorePath;
 use sea_orm::{
@@ -233,6 +234,78 @@ impl<'db> CacheTable<'db> {
       .collect();
 
     Ok(missing)
+  }
+
+  #[allow(clippy::too_many_arguments)]
+  pub async fn create_path(
+    &self,
+    cache: Uuid,
+    store_path: String,
+    nar_hash: String,
+    nar_size: u64,
+    file_hash: String,
+    file_size: u64,
+    deriver: Option<String>,
+    signature: String,
+    references: Vec<String>,
+  ) -> Result<(), DbErr> {
+    // Check if a nar with the same hash and size exists
+    let existing_nar = nar::Entity::find()
+      .filter(nar::Column::Hash.eq(file_hash.clone()))
+      .filter(nar::Column::Size.eq(file_size as i64))
+      .one(self.db)
+      .await?;
+
+    let nar = if let Some(existing_nar) = existing_nar {
+      existing_nar
+    } else {
+      let nar = nar::ActiveModel {
+        id: Set(Uuid::new_v4()),
+        hash: Set(file_hash.clone()),
+        size: Set(file_size as i64),
+      };
+      nar.insert(self.db).await?
+    };
+
+    let nar_info = nar_info::ActiveModel {
+      id: Set(Uuid::new_v4()),
+      nar_id: Set(nar.id),
+      cache_id: Set(cache),
+      compression: Set("zst".to_string()),
+      store_path: Set(store_path),
+      nar_hash: Set(nar_hash),
+      nar_size: Set(nar_size as i64),
+      file_hash: Set(file_hash),
+      file_size: Set(file_size as i64),
+      deriver: Set(deriver),
+      signature: Set(signature),
+    };
+    let nar_info = nar_info.insert(self.db).await?;
+
+    let mut nar_refernces = Vec::new();
+    for reference in references {
+      let reference = nar_info_reference::ActiveModel {
+        id: Set(Uuid::new_v4()),
+        nar_info_id: Set(nar_info.id),
+        store_path: Set(reference),
+      };
+      nar_refernces.push(reference);
+    }
+    nar_info_reference::Entity::insert_many(nar_refernces)
+      .exec(self.db)
+      .await?;
+
+    Ok(())
+  }
+
+  pub async fn is_store_path_in_cache(&self, cache: Uuid, store_path: &str) -> Result<bool, DbErr> {
+    let count = nar_info::Entity::find()
+      .filter(nar_info::Column::CacheId.eq(cache))
+      .filter(nar_info::Column::StorePath.eq(store_path.to_string()))
+      .count(self.db)
+      .await?;
+
+    Ok(count > 0)
   }
 }
 

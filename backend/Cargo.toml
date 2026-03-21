@@ -80,6 +80,8 @@ tower_governor = { version = "0.8.0", features = [
 ], default-features = false }
 governor = "0.10.4"
 dashmap = "6.1.0"
+async-compression = { version = "0.4.41", features = ["tokio", "zstd"] }
+sha2 = "0.10.9"
 
 [[bin]]
 name = "backend"
