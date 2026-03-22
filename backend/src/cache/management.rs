@@ -69,9 +69,10 @@ async fn create_cache(
     bail!(CONFLICT, "Cache with this name already exists");
   }
 
+  let quota = req.quota.max(0) * 1024 * 1024; // Convert from MiB to bytes, ensuring non-negative
   let uuid = db
     .cache()
-    .create_cache(req.name, req.public, req.quota, req.sig_key, auth.user_id)
+    .create_cache(req.name, req.public, quota, req.sig_key, auth.user_id)
     .await?;
 
   Ok(Json(CreateCacheResponse { uuid }))

@@ -39,7 +39,7 @@ export const getCacheDetails = async (
 };
 
 export const size_to_gib = (size: number) => {
-  return size / 1024;
+  return size / 1024 / 1024 / 1024;
 };
 
 export interface CreateCacheRequest {

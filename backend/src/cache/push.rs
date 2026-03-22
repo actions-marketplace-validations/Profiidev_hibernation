@@ -9,10 +9,16 @@ use axum::{
   extract::{DefaultBodyLimit, FromRequestParts, Path, Request},
   routing::{post, put},
 };
-use centaurus::{bail, db::init::Connection, error::Result, eyre::Context};
+use centaurus::{
+  bail,
+  db::init::Connection,
+  error::{ErrorReportStatusExt, Result},
+  eyre::Context,
+};
 use dashmap::DashMap;
 use entity::sea_orm_active_enums::AccessType;
 use futures_util::StreamExt;
+use http::StatusCode;
 use reqwest::Client;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
@@ -23,6 +29,7 @@ use shared::{
   },
   hash::to_nix_base32,
   pool::FuturePool,
+  sig::PublicKey,
 };
 use tokio::{
   io::{self, AsyncReadExt, AsyncWriteExt, BufReader},
@@ -190,13 +197,41 @@ async fn upload_path(
     bail!("Force push is not allowed for this cache");
   }
 
-  if !req.force
-    && db
-      .cache()
-      .is_store_path_in_cache(cache.id, &req.store_path.to_string())
-      .await?
+  let pk =
+    PublicKey::from_string(&cache.public_signing_key).status(StatusCode::INTERNAL_SERVER_ERROR)?;
+  if !pk.verify(
+    &req.signature,
+    &req.store_path,
+    &req.nar_hash,
+    req.nar_size,
+    &req.references,
+  ) {
+    bail!("Invalid signature");
+  }
+
+  if db
+    .cache()
+    .is_store_path_in_cache(cache.id, &req.store_path.to_string())
+    .await?
   {
     bail!("Store path is already in the cache");
+  }
+
+  if !req.force {
+    let mut downstream_caches = db.cache().downstream_caches(cache.id).await?;
+    let client = Client::new();
+    while let Some(downstream) = downstream_caches.pop() {
+      let url = Url::parse(&downstream.url)
+        .unwrap()
+        .join(&format!("{}.narinfo", req.store_path.hash()))?;
+      let req = client.head(url).build()?;
+      if let Ok(res) = client.execute(req).await
+        && let Ok(res) = res.error_for_status()
+        && res.status() == reqwest::StatusCode::OK
+      {
+        bail!("Store path is already in the downstream cache");
+      }
+    }
   }
 
   let upload_id = Uuid::new_v4();
@@ -278,7 +313,7 @@ async fn upload_nar(
         nar_size,
         file_hash,
         file_size,
-        signature: String::new(), // TODO: calculate real signature
+        signature: info.signature,
         deriver: info.deriver.map(|d| d.to_string()),
         references: info.references.into_iter().map(|r| r.to_string()).collect(),
       },
@@ -302,9 +337,6 @@ async fn upload_finish(
 
   if data.file_hash != req.file_hash || data.file_size != req.file_size {
     bail!("File hash or size mismatch");
-  }
-  if data.signature != req.signature {
-    bail!("Signature mismatch");
   }
 
   db.cache()

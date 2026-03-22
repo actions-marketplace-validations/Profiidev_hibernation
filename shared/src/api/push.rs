@@ -24,6 +24,7 @@ pub struct UploadPathRequest {
   pub nar_size: u64,
   pub deriver: Option<StorePath>,
   pub references: Vec<StorePath>,
+  pub signature: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -35,5 +36,4 @@ pub struct UploadPathResponse {
 pub struct UploadFinishRequest {
   pub file_hash: String,
   pub file_size: u64,
-  pub signature: String,
 }

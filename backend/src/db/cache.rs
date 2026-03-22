@@ -70,7 +70,7 @@ impl<'db> CacheTable<'db> {
       .group_by(cache::Column::Id)
       .select_only()
       .columns(cache::Column::iter())
-      .column_as(nar_info::Column::FileSize.sum(), "size")
+      .column_as(nar_info::Column::FileSize.sum().cast_as("BIGINT"), "size")
       .into_model::<CacheInfo>()
       .all(self.db)
       .await
@@ -102,7 +102,7 @@ impl<'db> CacheTable<'db> {
       .group_by(cache::Column::Id)
       .select_only()
       .columns(cache::Column::iter())
-      .column_as(nar_info::Column::FileSize.sum(), "size")
+      .column_as(nar_info::Column::FileSize.sum().cast_as("BIGINT"), "size")
       .into_model::<CacheDetails>()
       .one(self.db)
       .await
