@@ -1,5 +1,7 @@
 use std::{
   collections::HashSet,
+  fmt::Write,
+  io::IsTerminal,
   sync::{
     Arc, Mutex,
     atomic::{AtomicBool, Ordering},
@@ -11,6 +13,7 @@ use centaurus::{error::Result, eyre::Context};
 use harmonia_protocol::NarHash;
 use harmonia_store_core::store_path::{StoreDir, StorePath};
 use harmonia_store_remote::{DaemonClient, DaemonStore};
+use indicatif::{ProgressState, ProgressStyle};
 use sha2::{Digest, Sha256};
 use shared::{
   api::push::{UploadFinishRequest, UploadPathRequest},
@@ -19,7 +22,8 @@ use shared::{
 };
 use tokio::net::unix::{OwnedReadHalf, OwnedWriteHalf};
 use tokio_util::io::{InspectReader, ReaderStream};
-use tracing::{error, info, warn};
+use tracing::{Span, error, info, info_span, instrument, warn};
+use tracing_indicatif::span_ext::IndicatifSpanExt;
 use uuid::Uuid;
 
 use crate::api::{ApiClient, PushInfoResult};
@@ -108,15 +112,27 @@ pub async fn push_paths(
   let error = Arc::new(AtomicBool::new(false));
   let mut handles = Vec::new();
 
-  for _ in 0..10.min(to_push) {
+  let tty = std::io::stdin().is_terminal();
+  let span = info_span!("header");
+  if tty {
+    span.pb_set_length(to_push as u64);
+    span.pb_set_style(&ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
+            .unwrap()
+            .with_key("eta", |state: &ProgressState, w: &mut dyn Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
+            .progress_chars("#>-"));
+  }
+  let enter = span.enter();
+
+  for _ in 0..(num_cpus::get()).min(to_push) {
     let jobs = jobs.clone();
     let error = error.clone();
     let api = api.clone();
     let signing_key = signing_key.clone();
     let cache = res.cache;
+    let span = span.clone();
 
     let handle = tokio::spawn(async move {
-      upload_worker(jobs, error, api, cache, force, signing_key).await;
+      upload_worker(jobs, error, api, cache, force, signing_key, span).await;
     });
     handles.push(handle);
   }
@@ -124,6 +140,9 @@ pub async fn push_paths(
   for handle in handles {
     handle.await.unwrap();
   }
+
+  std::mem::drop(enter);
+  std::mem::drop(span);
 
   if error.load(Ordering::SeqCst) {
     error!("Failed to upload some paths.");
@@ -140,6 +159,7 @@ async fn upload_worker(
   cache: Uuid,
   force: bool,
   signing_key: KeyPair,
+  span: Span,
 ) {
   let mut conn = DaemonClient::builder().connect_daemon().await.unwrap();
 
@@ -156,9 +176,11 @@ async fn upload_worker(
     } else {
       info!("Successfully uploaded {}", info.store_path);
     }
+    span.pb_inc(1);
   }
 }
 
+#[instrument(skip_all)]
 async fn upload_path(
   daemon: &mut DaemonClient<OwnedReadHalf, OwnedWriteHalf>,
   api: &ApiClient,
@@ -167,6 +189,13 @@ async fn upload_path(
   force: bool,
   signing_key: &KeyPair,
 ) -> Result<()> {
+  let tty = std::io::stdin().is_terminal();
+  if tty {
+    Span::current().pb_set_style(
+      &ProgressStyle::with_template(&format!("↳ Uploading {}", info.store_path)).unwrap(),
+    );
+  }
+
   let nar_hash = to_nix_base32(info.nar_hash.as_ref());
   let signature = signing_key.sign(&info.store_path, &nar_hash, info.nar_size, &info.references);
 
