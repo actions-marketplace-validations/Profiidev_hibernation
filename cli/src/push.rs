@@ -15,6 +15,7 @@ use sha2::{Digest, Sha256};
 use shared::{
   api::push::{UploadFinishRequest, UploadPathRequest},
   hash::to_nix_base32,
+  sig::KeyPair,
 };
 use tokio::net::unix::{OwnedReadHalf, OwnedWriteHalf};
 use tokio_util::io::{InspectReader, ReaderStream};
@@ -38,6 +39,7 @@ pub async fn push_paths(
   paths: &[String],
   no_deps: bool,
   force: bool,
+  signing_key: KeyPair,
 ) {
   info!("Collecting paths for push");
   let store_dir = StoreDir::default();
@@ -100,20 +102,21 @@ pub async fn push_paths(
     .filter(|info| res.paths.contains(&info.store_path))
     .collect::<Vec<_>>();
 
-  let todo = path_infos.len();
-  info!("Pushing {} paths to the server", todo);
+  let to_push = path_infos.len();
+  info!("Pushing {} paths to the server", to_push);
   let jobs = Arc::new(tokio::sync::Mutex::new(path_infos));
   let error = Arc::new(AtomicBool::new(false));
   let mut handles = Vec::new();
 
-  for _ in 0..10.min(todo) {
+  for _ in 0..10.min(to_push) {
     let jobs = jobs.clone();
     let error = error.clone();
     let api = api.clone();
+    let signing_key = signing_key.clone();
     let cache = res.cache;
 
     let handle = tokio::spawn(async move {
-      upload_worker(jobs, error, api, cache, force).await;
+      upload_worker(jobs, error, api, cache, force, signing_key).await;
     });
     handles.push(handle);
   }
@@ -136,6 +139,7 @@ async fn upload_worker(
   api: ApiClient,
   cache: Uuid,
   force: bool,
+  signing_key: KeyPair,
 ) {
   let mut conn = DaemonClient::builder().connect_daemon().await.unwrap();
 
@@ -146,7 +150,7 @@ async fn upload_worker(
     };
     drop(lock);
 
-    if let Err(result) = upload_path(&mut conn, &api, &info, cache, force).await {
+    if let Err(result) = upload_path(&mut conn, &api, &info, cache, force, &signing_key).await {
       error!("Failed to upload {}: {:?}", info.store_path, result);
       error.store(true, Ordering::SeqCst);
     } else {
@@ -161,7 +165,11 @@ async fn upload_path(
   info: &PathInfo,
   cache: Uuid,
   force: bool,
+  signing_key: &KeyPair,
 ) -> Result<()> {
+  let nar_hash = to_nix_base32(info.nar_hash.as_ref());
+  let signature = signing_key.sign(&info.store_path, &nar_hash, info.nar_size, &info.references);
+
   let upload_id = api
     .upload_path(&UploadPathRequest {
       cache,
@@ -169,8 +177,9 @@ async fn upload_path(
       store_path: info.store_path.clone(),
       deriver: info.deriver.clone(),
       nar_size: info.nar_size,
-      nar_hash: to_nix_base32(info.nar_hash.as_ref()),
+      nar_hash,
       references: info.references.clone(),
+      signature,
     })
     .await?
     .uuid;
@@ -205,7 +214,6 @@ async fn upload_path(
     .upload_finish(
       upload_id,
       UploadFinishRequest {
-        signature: String::new(),
         file_hash,
         file_size,
       },

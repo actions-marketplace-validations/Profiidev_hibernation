@@ -2,10 +2,13 @@ use base64::{Engine, prelude::BASE64_STANDARD};
 use ed25519_compact::Signature;
 use harmonia_store_core::store_path::{StoreDir, StorePath};
 
+#[derive(Clone)]
 pub struct KeyPair {
   name: String,
   keypair: ed25519_compact::KeyPair,
 }
+
+#[derive(Clone)]
 pub struct PublicKey {
   name: String,
   public_key: ed25519_compact::PublicKey,
