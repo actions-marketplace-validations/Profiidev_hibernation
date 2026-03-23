@@ -1,9 +1,9 @@
 import { RequestError } from 'positron-components/backend';
-import type { PageLoad } from './$types';
+import type { LayoutLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { getCacheDetails } from '$lib/backend/cache.svelte';
 
-export const load: PageLoad = async ({ params, fetch }) => {
+export const load: LayoutLoad = async ({ params, fetch }) => {
   let res = await getCacheDetails(params.uuid, fetch);
 
   if (typeof res !== 'object') {

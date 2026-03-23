@@ -9,6 +9,8 @@ pub struct Model {
   pub id: Uuid,
   pub hash: String,
   pub size: i64,
+  pub nar_hash: String,
+  pub nar_size: i64,
   pub created_at: DateTime,
 }
 

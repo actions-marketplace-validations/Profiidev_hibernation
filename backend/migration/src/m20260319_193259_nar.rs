@@ -14,6 +14,8 @@ impl MigrationTrait for Migration {
           .col(pk_uuid(Nar::Id))
           .col(string(Nar::Hash))
           .col(big_integer(Nar::Size))
+          .col(string(Nar::NarHash))
+          .col(big_integer(Nar::NarSize))
           .col(date_time(Nar::CreatedAt))
           .to_owned(),
       )
@@ -27,11 +29,14 @@ impl MigrationTrait for Migration {
   }
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(DeriveIden)]
 pub enum Nar {
   Table,
   Id,
   Hash,
   Size,
+  NarHash,
+  NarSize,
   CreatedAt,
 }

@@ -5,9 +5,10 @@ use entity::{
 };
 use harmonia_store_core::store_path::StorePath;
 use http::StatusCode;
+use migration::ExprTrait;
 use sea_orm::{
   ActiveValue::Set, Condition, FromQueryResult, IntoActiveModel, Iterable, JoinType, QuerySelect,
-  TransactionTrait, prelude::*,
+  QueryTrait, TransactionTrait, prelude::*,
 };
 use serde::Serialize;
 
@@ -62,6 +63,7 @@ impl<'db> CacheTable<'db> {
   pub async fn list_caches(&self, user: Uuid) -> Result<Vec<CacheInfo>, DbErr> {
     let mut query = cache::Entity::find()
       .join(JoinType::LeftJoin, cache::Relation::NarInfo.def())
+      .join(JoinType::LeftJoin, nar_info::Relation::Nar.def())
       .join(JoinType::LeftJoin, cache::Relation::CacheAccess.def());
 
     query = apply_user_filter(query, self.db, user, AccessType::View).await?;
@@ -70,7 +72,7 @@ impl<'db> CacheTable<'db> {
       .group_by(cache::Column::Id)
       .select_only()
       .columns(cache::Column::iter())
-      .column_as(nar_info::Column::FileSize.sum().cast_as("BIGINT"), "size")
+      .column_as(nar::Column::Size.sum().cast_as("BIGINT"), "size")
       .into_model::<CacheInfo>()
       .all(self.db)
       .await
@@ -94,6 +96,7 @@ impl<'db> CacheTable<'db> {
   pub async fn cache_details(&self, uuid: Uuid, user: Uuid) -> Result<Option<CacheDetails>, DbErr> {
     let mut query = cache::Entity::find_by_id(uuid)
       .join(JoinType::LeftJoin, cache::Relation::NarInfo.def())
+      .join(JoinType::LeftJoin, nar_info::Relation::Nar.def())
       .join(JoinType::LeftJoin, cache::Relation::CacheAccess.def());
 
     query = apply_user_filter(query, self.db, user, AccessType::View).await?;
@@ -102,7 +105,7 @@ impl<'db> CacheTable<'db> {
       .group_by(cache::Column::Id)
       .select_only()
       .columns(cache::Column::iter())
-      .column_as(nar_info::Column::FileSize.sum().cast_as("BIGINT"), "size")
+      .column_as(nar::Column::Size.sum().cast_as("BIGINT"), "size")
       .into_model::<CacheDetails>()
       .one(self.db)
       .await
@@ -266,8 +269,8 @@ impl<'db> CacheTable<'db> {
         Box::pin(async move {
           // Check if a nar with the same hash and size exists
           let existing_nar = nar::Entity::find()
-            .filter(nar::Column::Hash.eq(nar_hash.clone()))
-            .filter(nar::Column::Size.eq(nar_size as i64))
+            .filter(nar::Column::NarHash.eq(nar_hash.clone()))
+            .filter(nar::Column::NarSize.eq(nar_size as i64))
             .one(db)
             .await?;
 
@@ -280,8 +283,10 @@ impl<'db> CacheTable<'db> {
               .ok_or(DbErr::RecordNotFound("Nar not found".to_string()))?
               .into_active_model();
 
-            nar.hash = Set(nar_hash.clone());
-            nar.size = Set(nar_size as i64);
+            nar.hash = Set(file_hash.clone());
+            nar.size = Set(file_size as i64);
+            nar.nar_hash = Set(nar_hash.clone());
+            nar.nar_size = Set(nar_size as i64);
             nar.update(db).await?
           };
 
@@ -291,10 +296,6 @@ impl<'db> CacheTable<'db> {
             cache_id: Set(cache),
             compression: Set("zst".to_string()),
             store_path: Set(store_path),
-            nar_hash: Set(nar_hash),
-            nar_size: Set(nar_size as i64),
-            file_hash: Set(file_hash),
-            file_size: Set(file_size as i64),
             deriver: Set(deriver),
             signature: Set(signature),
           };
@@ -338,6 +339,8 @@ impl<'db> CacheTable<'db> {
       id: Set(nar_id),
       hash: Set("".to_string()),
       size: Set(0),
+      nar_hash: Set("".to_string()),
+      nar_size: Set(0),
       created_at: Set(chrono::Utc::now().naive_utc()),
     };
     nar.insert(self.db).await?;
@@ -358,6 +361,44 @@ impl<'db> CacheTable<'db> {
 
   pub async fn delete_nar(&self, nar_id: Uuid) -> Result<(), DbErr> {
     nar::Entity::delete_by_id(nar_id).exec(self.db).await?;
+    Ok(())
+  }
+
+  pub async fn find_duplicate_nars(&self) -> Result<Vec<String>, DbErr> {
+    let referenced_ids = nar_info::Entity::find()
+      .select_only()
+      .column(nar_info::Column::NarId)
+      .distinct()
+      .into_query();
+
+    nar::Entity::find()
+      .select_only()
+      .column(nar::Column::NarHash)
+      .filter(nar::Column::Id.in_subquery(referenced_ids))
+      .group_by(nar::Column::NarHash)
+      .having(nar::Column::NarHash.count().gt(1))
+      .into_tuple::<String>()
+      .all(self.db)
+      .await
+  }
+
+  pub async fn find_nars_by_nar_hash(&self, nar_hash: &str) -> Result<Vec<Uuid>, DbErr> {
+    nar::Entity::find()
+      .select_only()
+      .column(nar::Column::Id)
+      .filter(nar::Column::NarHash.eq(nar_hash))
+      .into_tuple::<Uuid>()
+      .all(self.db)
+      .await
+  }
+
+  pub async fn replace_nar_id(&self, old: &[Uuid], new: Uuid) -> Result<(), DbErr> {
+    nar_info::Entity::update_many()
+      .col_expr(nar_info::Column::NarId, Expr::value(new))
+      .filter(nar_info::Column::NarId.is_in(old.to_vec()))
+      .exec(self.db)
+      .await?;
+
     Ok(())
   }
 }

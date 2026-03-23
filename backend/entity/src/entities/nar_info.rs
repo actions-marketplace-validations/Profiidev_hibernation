@@ -11,10 +11,6 @@ pub struct Model {
   pub nar_id: Uuid,
   pub store_path: String,
   pub compression: String,
-  pub file_hash: String,
-  pub file_size: i64,
-  pub nar_hash: String,
-  pub nar_size: i64,
   pub deriver: Option<String>,
   pub signature: String,
 }

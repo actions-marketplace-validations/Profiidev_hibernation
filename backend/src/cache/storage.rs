@@ -7,6 +7,7 @@ use tokio::{
   fs,
   io::{self, AsyncRead},
 };
+use tracing::info;
 use uuid::Uuid;
 
 use crate::config::StorageConfig;
@@ -34,6 +35,7 @@ impl FileStorage {
         bail!("Failed to verify access permission on storage path")
       }
 
+      info!("Using local file storage at {}", path.display());
       return Ok(Self::Local(path));
     }
 
@@ -66,6 +68,10 @@ impl FileStorage {
       bail!("S3 bucket does not exist");
     }
 
+    info!(
+      "Using S3 file storage with bucket {}",
+      config.s3_bucket.as_ref().unwrap()
+    );
     Ok(Self::S3(Arc::new(*bucket)))
   }
 

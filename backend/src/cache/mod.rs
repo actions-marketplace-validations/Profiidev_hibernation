@@ -8,6 +8,7 @@ use crate::{
 };
 
 mod cleanup;
+mod dedupe;
 mod management;
 mod push;
 mod storage;
@@ -25,7 +26,8 @@ pub async fn state(router: Router, db: Connection, config: &Config) -> Router {
     .expect("Failed to init FileStorage");
   let push_state = PushState::new();
 
-  cleanup::start(db, storage.clone());
+  cleanup::start(db.clone(), storage.clone());
+  dedupe::start(db);
 
   router
     .layer(axum::Extension(storage))

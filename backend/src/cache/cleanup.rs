@@ -28,6 +28,7 @@ async fn run_cleanup(db: &Connection, storage: &FileStorage) {
     }
   };
 
+  info!("Found {} orphan nars", orphan.len());
   for orphan in orphan {
     if let Err(e) = storage.delete_file(orphan.id).await {
       warn!("Failed to delete orphan nar {}: {e}", orphan.id);

@@ -18,10 +18,6 @@ impl MigrationTrait for Migration {
           .col(uuid(NarInfo::NarId))
           .col(string(NarInfo::StorePath))
           .col(string(NarInfo::Compression))
-          .col(string(NarInfo::FileHash))
-          .col(big_integer(NarInfo::FileSize))
-          .col(string(NarInfo::NarHash))
-          .col(big_integer(NarInfo::NarSize))
           .col(string_null(NarInfo::Deriver))
           .col(string(NarInfo::Signature))
           .foreign_key(
@@ -80,10 +76,6 @@ enum NarInfo {
   NarId,
   StorePath,
   Compression,
-  FileHash,
-  FileSize,
-  NarHash,
-  NarSize,
   Deriver,
   Signature,
 }
