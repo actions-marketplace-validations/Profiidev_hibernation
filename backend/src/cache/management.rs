@@ -5,6 +5,7 @@ use axum::{
 };
 use centaurus::{bail, db::init::Connection, error::Result};
 use serde::{Deserialize, Serialize};
+use shared::sig::PublicKey;
 use uuid::Uuid;
 
 use crate::{
@@ -67,6 +68,10 @@ async fn create_cache(
 ) -> Result<Json<CreateCacheResponse>> {
   if db.cache().by_name(req.name.clone()).await?.is_some() {
     bail!(CONFLICT, "Cache with this name already exists");
+  }
+
+  if PublicKey::from_string(&req.sig_key).is_none() {
+    bail!(NOT_ACCEPTABLE, "Invalid signature key format");
   }
 
   let quota = req.quota.max(0) * 1024 * 1024; // Convert from MiB to bytes, ensuring non-negative

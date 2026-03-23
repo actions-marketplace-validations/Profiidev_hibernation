@@ -23,7 +23,12 @@
       if (res === RequestError.Conflict) {
         return {
           error: 'A cache with this name already exists.',
-          path: 'name'
+          field: 'name'
+        };
+      } else if (res === RequestError.NotAcceptable) {
+        return {
+          error: 'Invalid signature key format.',
+          field: 'sig_key'
         };
       } else {
         return { error: 'Error creating cache.' };

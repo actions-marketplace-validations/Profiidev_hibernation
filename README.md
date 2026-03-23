@@ -2,6 +2,7 @@
 
 ## TODO
 
+- signing key validation when creating cache
 - cache actual file storage
 - cache eviction settings
 - cache files cleanup job + don't delete entries in nar table when no narinfo points to them
