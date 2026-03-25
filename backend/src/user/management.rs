@@ -101,6 +101,14 @@ async fn create_user(
   state: PasswordState,
   req: CreateUser,
 ) -> Result<Json<CreateUserResponse>> {
+  if req.name.trim().is_empty() {
+    bail!(BAD_REQUEST, "Name cannot be empty");
+  }
+
+  if req.email.trim().is_empty() {
+    bail!(BAD_REQUEST, "Email cannot be empty");
+  }
+
   if db.user().try_get_user_by_email(&req.email).await?.is_some() {
     bail!(CONFLICT, "User with this email already exists");
   }
@@ -219,6 +227,10 @@ async fn edit_user(
   updater: Updater,
   req: UserEditReq,
 ) -> Result<()> {
+  if req.name.trim().is_empty() {
+    bail!(BAD_REQUEST, "Name cannot be empty");
+  }
+
   let self_permissions = db.group().get_user_permissions(auth.user_id).await?;
   let target_permissions = db
     .group()

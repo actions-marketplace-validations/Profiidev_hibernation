@@ -79,6 +79,10 @@ async fn create_group(
   updater: Updater,
   data: CreateGroupRequest,
 ) -> Result<Json<GroupCreateResponse>> {
+  if data.name.trim().is_empty() {
+    bail!(BAD_REQUEST, "Group name cannot be empty");
+  }
+
   if db.group().find_group_by_name(&data.name).await?.is_some() {
     bail!(CONFLICT, "A group with this name already exists");
   }
@@ -140,6 +144,10 @@ async fn edit_group(
   updater: Updater,
   data: EditGroupRequest,
 ) -> Result<()> {
+  if data.name.trim().is_empty() {
+    bail!(BAD_REQUEST, "Group name cannot be empty");
+  }
+
   if let Some(admin_group) = db.setup().get_admin_group_id().await?
     && admin_group == data.uuid
   {

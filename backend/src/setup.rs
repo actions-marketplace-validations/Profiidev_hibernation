@@ -88,6 +88,14 @@ async fn complete_setup(
     bail!(CONFLICT, "Setup has already been completed");
   }
 
+  if payload.admin_username.trim().is_empty() {
+    bail!(BAD_REQUEST, "Admin username cannot be empty");
+  }
+
+  if payload.admin_email.trim().is_empty() {
+    bail!(BAD_REQUEST, "Admin email cannot be empty");
+  }
+
   let Some(admin_group_id) = db.setup().get_admin_group_id().await? else {
     bail!(
       INTERNAL_SERVER_ERROR,

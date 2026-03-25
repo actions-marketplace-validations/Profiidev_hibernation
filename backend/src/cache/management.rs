@@ -5,6 +5,7 @@ use axum::{
 };
 use centaurus::{bail, db::init::Connection, error::Result};
 use chrono::{DateTime, Utc};
+use entity::sea_orm_active_enums::AccessType;
 use serde::{Deserialize, Serialize};
 use shared::sig::PublicKey;
 use uuid::Uuid;
@@ -25,6 +26,7 @@ pub fn router() -> Router {
     .route("/", delete(delete_cache))
     .route("/{uuid}", get(cache_details))
     .route("/{uuid}/search", post(search_store_paths))
+    .route("/{uuid}", post(edit_cache))
 }
 
 async fn list_caches(auth: JwtAuth, db: Connection) -> Result<Json<Vec<CacheInfo>>> {
@@ -68,6 +70,10 @@ async fn create_cache(
   db: Connection,
   req: CreateCacheRequest,
 ) -> Result<Json<CreateCacheResponse>> {
+  if req.name.trim().is_empty() {
+    bail!(BAD_REQUEST, "Cache name cannot be empty");
+  }
+
   if db.cache().by_name(req.name.clone()).await?.is_some() {
     bail!(CONFLICT, "Cache with this name already exists");
   }
@@ -92,7 +98,11 @@ struct DeleteCacheRequest {
 }
 
 async fn delete_cache(auth: JwtAuth, db: Connection, req: DeleteCacheRequest) -> Result<()> {
-  db.cache().delete_cache(req.uuid, auth.user_id).await?;
+  if db.cache().cache_user_access(auth.user_id, req.uuid).await? != Some(AccessType::Edit) {
+    bail!(FORBIDDEN, "Insufficient permissions");
+  }
+
+  db.cache().delete_cache(req.uuid).await?;
   Ok(())
 }
 
@@ -123,9 +133,18 @@ async fn search_store_paths(
     bail!(BAD_REQUEST, "Query cannot be empty");
   }
 
+  if db
+    .cache()
+    .cache_user_access(auth.user_id, path.uuid)
+    .await?
+    != Some(AccessType::Edit)
+  {
+    bail!(FORBIDDEN, "Insufficient permissions");
+  }
+
   let paths = db
     .cache()
-    .search_store_paths(path.uuid, auth.user_id, req.query, req.order, req.sort)
+    .search_store_paths(path.uuid, req.query, req.order, req.sort)
     .await?
     .into_iter()
     .map(|entry| SearchResult {
@@ -140,4 +159,66 @@ async fn search_store_paths(
     .collect();
 
   Ok(Json(paths))
+}
+
+#[derive(Deserialize, FromRequest)]
+#[from_request(via(Json))]
+struct EditCacheRequest {
+  name: String,
+  priority: i32,
+  public: bool,
+  quota: i64,
+  sig_key: String,
+  allow_force_push: bool,
+}
+
+async fn edit_cache(
+  auth: JwtAuth,
+  path: CachePath,
+  db: Connection,
+  req: EditCacheRequest,
+) -> Result<()> {
+  if req.priority < 0 {
+    bail!(BAD_REQUEST, "Priority must be non-negative");
+  }
+
+  if PublicKey::from_string(&req.sig_key).is_none() {
+    bail!(NOT_ACCEPTABLE, "Invalid signature key format");
+  }
+
+  if req.quota < 0 {
+    bail!(BAD_REQUEST, "Quota must be non-negative");
+  }
+
+  if db
+    .cache()
+    .cache_user_access(auth.user_id, path.uuid)
+    .await?
+    != Some(AccessType::Edit)
+  {
+    bail!(FORBIDDEN, "Insufficient permissions");
+  }
+
+  if db
+    .cache()
+    .by_name(req.name.clone())
+    .await?
+    .map_or_else(|| false, |c| c.id != path.uuid)
+  {
+    bail!(CONFLICT, "Cache with this name already exists");
+  }
+
+  db.cache()
+    .edit_cache(
+      req.name,
+      req.public,
+      req.quota,
+      req.sig_key,
+      req.priority,
+      req.allow_force_push,
+      path.uuid,
+    )
+    .await?;
+
+  Ok(())
 }

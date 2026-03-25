@@ -23,6 +23,8 @@ export type CacheDetails = CacheInfo & {
   sig_key: string;
   priority: number;
   nar_count: number;
+  allow_force_push: boolean;
+  has_write_access: boolean;
 };
 
 export const getCacheDetails = async (
@@ -113,4 +115,19 @@ export const searchCache = async (
   if (ret && Array.isArray(ret)) {
     return ret;
   }
+};
+
+export interface CacheEdit {
+  name: string;
+  public: boolean;
+  quota: number;
+  sig_key: string;
+  priority: number;
+  allow_force_push: boolean;
+}
+
+export const editCache = async (uuid: string, data: CacheEdit) => {
+  return await post(`/api/cache/management/${uuid}`, {
+    body: data
+  });
 };

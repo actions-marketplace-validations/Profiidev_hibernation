@@ -1,4 +1,4 @@
-use centaurus::{bail, error::ErrorReportStatusExt};
+use centaurus::error::ErrorReportStatusExt;
 use entity::{
   cache, cache_access, downstream_cache, group_user, nar, nar_info, nar_info_reference,
   sea_orm_active_enums::AccessType,
@@ -12,7 +12,10 @@ use sea_orm::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{db::group::GroupTable, permissions::Permission};
+use crate::{
+  db::group::GroupTable,
+  permissions::{CacheEdit, CacheView, Permission},
+};
 
 #[derive(Serialize, FromQueryResult)]
 pub struct CacheInfo {
@@ -38,6 +41,8 @@ pub struct CacheDetails {
   public_signing_key: String,
   priority: i32,
   nar_count: i64,
+  allow_force_push: bool,
+  has_write_access: bool,
 }
 
 #[derive(Serialize, FromQueryResult)]
@@ -119,6 +124,8 @@ impl<'db> CacheTable<'db> {
   }
 
   pub async fn cache_details(&self, uuid: Uuid, user: Uuid) -> Result<Option<CacheDetails>, DbErr> {
+    let access = self.cache_user_access(user, uuid).await?;
+
     let mut query = cache::Entity::find_by_id(uuid)
       .join(JoinType::LeftJoin, cache::Relation::NarInfo.def())
       .join(JoinType::LeftJoin, nar_info::Relation::Nar.def())
@@ -132,6 +139,10 @@ impl<'db> CacheTable<'db> {
       .columns(cache::Column::iter())
       .column_as(nar::Column::Size.sum().cast_as("BIGINT"), "size")
       .column_as(nar_info::Column::Id.count().cast_as("BIGINT"), "nar_count")
+      .column_as(
+        Expr::val(access == Some(AccessType::Edit)),
+        "has_write_access",
+      )
       .into_model::<CacheDetails>()
       .one(self.db)
       .await
@@ -219,15 +230,7 @@ impl<'db> CacheTable<'db> {
       .status_context(StatusCode::INTERNAL_SERVER_ERROR, "DB Error")
   }
 
-  pub async fn delete_cache(&self, uuid: Uuid, user: Uuid) -> centaurus::error::Result<()> {
-    if self
-      .by_id_filtered(uuid, user, AccessType::Edit)
-      .await?
-      .is_none()
-    {
-      bail!(NOT_FOUND, "Cache not found or insufficient permissions");
-    }
-
+  pub async fn delete_cache(&self, uuid: Uuid) -> Result<(), DbErr> {
     cache::Entity::delete_by_id(uuid).exec(self.db).await?;
 
     Ok(())
@@ -434,19 +437,10 @@ impl<'db> CacheTable<'db> {
   pub async fn search_store_paths(
     &self,
     cache: Uuid,
-    user: Uuid,
     query: String,
     order: SearchOrder,
     sort: SearchSort,
-  ) -> centaurus::error::Result<Vec<SearchResult>> {
-    if self
-      .by_id_filtered(cache, user, AccessType::Edit)
-      .await?
-      .is_none()
-    {
-      bail!(NOT_FOUND, "Cache not found or insufficient permissions");
-    }
-
+  ) -> Result<Vec<SearchResult>, DbErr> {
     let mut query = nar_info::Entity::find()
       .filter(nar_info::Column::CacheId.eq(cache))
       .filter(nar_info::Column::StorePath.contains(query.trim().to_lowercase()))
@@ -471,19 +465,87 @@ impl<'db> CacheTable<'db> {
       query = query.order_by(column, order);
     }
 
-    Ok(
-      query
-        .select_only()
-        .column(nar_info::Column::StorePath)
-        .column(nar_info::Column::CreatedAt)
-        .column(nar_info::Column::LastAccessedAt)
-        .column(nar_info::Column::Accessed)
-        .column(nar::Column::Size)
-        .limit(100)
-        .into_model::<SearchResult>()
-        .all(self.db)
-        .await?,
-    )
+    query
+      .select_only()
+      .column(nar_info::Column::StorePath)
+      .column(nar_info::Column::CreatedAt)
+      .column(nar_info::Column::LastAccessedAt)
+      .column(nar_info::Column::Accessed)
+      .column(nar::Column::Size)
+      .limit(100)
+      .into_model::<SearchResult>()
+      .all(self.db)
+      .await
+  }
+
+  pub async fn cache_user_access(
+    &self,
+    user: Uuid,
+    cache: Uuid,
+  ) -> Result<Option<AccessType>, DbErr> {
+    let user_permissions = GroupTable::new(self.db).get_user_permissions(user).await?;
+    if user_permissions.contains(&CacheEdit::name().to_string()) {
+      return Ok(Some(AccessType::Edit));
+    }
+
+    let access = cache_access::Entity::find()
+      .filter(cache_access::Column::CacheId.eq(cache))
+      .filter(
+        cache_access::Column::UserId.eq(Some(user)).or(
+          cache_access::Column::GroupId.in_subquery(
+            group_user::Entity::find()
+              .filter(group_user::Column::UserId.eq(user))
+              .select_only()
+              .column_as(group_user::Column::GroupId, QueryAs::GroupId)
+              .into_query(),
+          ),
+        ),
+      )
+      .select_only()
+      .column(cache_access::Column::AccessType)
+      .distinct()
+      .into_tuple::<AccessType>()
+      .all(self.db)
+      .await?;
+
+    if access.contains(&AccessType::Edit) {
+      Ok(Some(AccessType::Edit))
+    } else if access.contains(&AccessType::View)
+      || user_permissions.contains(&CacheView::name().to_string())
+    {
+      Ok(Some(AccessType::View))
+    } else {
+      Ok(None)
+    }
+  }
+
+  #[allow(clippy::too_many_arguments)]
+  pub async fn edit_cache(
+    &self,
+    name: String,
+    public: bool,
+    quota: i64,
+    sig_key: String,
+    priority: i32,
+    allow_force_push: bool,
+    cache_id: Uuid,
+  ) -> Result<(), DbErr> {
+    let mut cache = cache::Entity::find_by_id(cache_id)
+      .one(self.db)
+      .await?
+      .ok_or(DbErr::RecordNotFound("Cache not found".to_string()))?
+      .into_active_model();
+
+    cache.name = Set(name);
+    cache.public = Set(public);
+    cache.quota = Set(quota);
+    cache.public_signing_key = Set(sig_key);
+    cache.priority = Set(priority);
+    cache.allow_force_push = Set(allow_force_push);
+
+    cache.update(self.db).await?;
+
+    Ok(())
   }
 }
 
