@@ -131,3 +131,7 @@ export const editCache = async (uuid: string, data: CacheEdit) => {
     body: data
   });
 };
+
+export const clearCache = async (uuid: string) => {
+  return await delete_(`/api/cache/management/${uuid}`);
+};

@@ -27,6 +27,7 @@ pub fn router() -> Router {
     .route("/{uuid}", get(cache_details))
     .route("/{uuid}/search", post(search_store_paths))
     .route("/{uuid}", post(edit_cache))
+    .route("/{uuid}", delete(clear_cache))
 }
 
 async fn list_caches(auth: JwtAuth, db: Connection) -> Result<Json<Vec<CacheInfo>>> {
@@ -220,5 +221,19 @@ async fn edit_cache(
     )
     .await?;
 
+  Ok(())
+}
+
+async fn clear_cache(auth: JwtAuth, path: CachePath, db: Connection) -> Result<()> {
+  if db
+    .cache()
+    .cache_user_access(auth.user_id, path.uuid)
+    .await?
+    != Some(AccessType::Edit)
+  {
+    bail!(FORBIDDEN, "Insufficient permissions");
+  }
+
+  db.cache().clear_cache(path.uuid).await?;
   Ok(())
 }

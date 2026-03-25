@@ -547,6 +547,15 @@ impl<'db> CacheTable<'db> {
 
     Ok(())
   }
+
+  pub async fn clear_cache(&self, cache_id: Uuid) -> Result<(), DbErr> {
+    nar_info::Entity::delete_many()
+      .filter(nar_info::Column::CacheId.eq(cache_id))
+      .exec(self.db)
+      .await?;
+
+    Ok(())
+  }
 }
 
 fn serialize_i64_or_zero<S>(num: &Option<i64>, serializer: S) -> Result<S::Ok, S::Error>

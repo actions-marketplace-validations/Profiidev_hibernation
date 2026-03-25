@@ -116,10 +116,16 @@ pub async fn push_paths(
   let span = info_span!("header");
   if tty {
     span.pb_set_length(to_push as u64);
-    span.pb_set_style(&ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
-            .unwrap()
-            .with_key("eta", |state: &ProgressState, w: &mut dyn Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
-            .progress_chars("#>-"));
+    span.pb_set_style(
+      &ProgressStyle::with_template(
+        "{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos:>2}/{len:2} ({eta})",
+      )
+      .unwrap()
+      .with_key("eta", |state: &ProgressState, w: &mut dyn Write| {
+        write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap()
+      })
+      .progress_chars("#>-"),
+    );
   }
   let enter = span.enter();
 
