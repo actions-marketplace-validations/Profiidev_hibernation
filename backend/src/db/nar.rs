@@ -349,4 +349,23 @@ impl<'db> NarTable<'db> {
       .all(self.db)
       .await
   }
+
+  pub async fn get_nar(
+    &self,
+    cache: Uuid,
+    file_hash: &str,
+    compression: &str,
+  ) -> Result<Option<(Uuid, i64)>, DbErr> {
+    nar_info::Entity::find()
+      .filter(nar_info::Column::CacheId.eq(cache))
+      .join(JoinType::InnerJoin, nar_info::Relation::Nar.def())
+      .filter(nar::Column::Hash.eq(file_hash))
+      .filter(nar_info::Column::Compression.eq(compression))
+      .select_only()
+      .column(nar::Column::Id)
+      .column(nar::Column::Size)
+      .into_tuple::<(Uuid, i64)>()
+      .one(self.db)
+      .await
+  }
 }

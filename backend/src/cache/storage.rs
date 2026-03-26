@@ -101,6 +101,28 @@ impl FileStorage {
     Ok(())
   }
 
+  pub async fn get_file(&self, nar_id: Uuid) -> Result<Box<dyn AsyncRead + Unpin + Send>> {
+    if !self.exists(nar_id).await? {
+      bail!(NOT_FOUND, "Nar file not found");
+    }
+
+    let name = format!("{}.nar", nar_id);
+    match self {
+      Self::Local(path) => {
+        let file_path = path.join(&name);
+        let file = fs::File::open(file_path).await?;
+        Ok(Box::new(file) as Box<dyn AsyncRead + Unpin + Send>)
+      }
+      Self::S3(bucket) => {
+        let stream = bucket
+          .get_object_stream(&name)
+          .await
+          .context("Failed to download nar from S3 Bucket")?;
+        Ok(Box::new(stream))
+      }
+    }
+  }
+
   pub async fn exists(&self, nar_id: Uuid) -> Result<bool> {
     let name = format!("{}.nar", nar_id);
     match self {

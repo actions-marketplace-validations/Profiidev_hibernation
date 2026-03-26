@@ -1,14 +1,19 @@
 use axum::{
   Router,
+  body::Body,
   extract::{FromRequestParts, Path},
   routing::{get, head},
 };
 use centaurus::{bail, db::init::Connection, error::Result};
-use http::HeaderMap;
+use http::{HeaderMap, HeaderName, StatusCode, header};
 use serde::Deserialize;
+use tokio_util::io::ReaderStream;
 use uuid::Uuid;
 
-use crate::db::{DBTrait, nar::NarInfoData};
+use crate::{
+  cache::storage::FileStorage,
+  db::{DBTrait, nar::NarInfoData},
+};
 
 /// https://fzakaria.github.io/nix-http-binary-cache-api-spec/#/default
 pub fn router() -> Router {
@@ -109,4 +114,37 @@ Sig: {}",
   ))
 }
 
-async fn nar() {}
+#[derive(FromRequestParts, Deserialize)]
+#[from_request(via(Path))]
+struct NarPath {
+  uuid: Uuid,
+  hash: String,
+}
+
+async fn nar(
+  db: Connection,
+  path: NarPath,
+  storage: FileStorage,
+) -> Result<(StatusCode, [(HeaderName, String); 3], Body)> {
+  // parse hash as <hash>.nar.<compression>
+  let Some((hash, compression)) = path.hash.split_once(".nar.") else {
+    bail!(NOT_FOUND, "Invalid nar path");
+  };
+
+  let Some((nar_id, file_size)) = db.nar().get_nar(path.uuid, hash, compression).await? else {
+    bail!(NOT_FOUND, "Nar not found");
+  };
+  tracing::info!("Serving nar {} for cache {}", nar_id, path.uuid);
+
+  let stream = storage.get_file(nar_id).await?;
+
+  let body = Body::from_stream(ReaderStream::new(stream));
+
+  let headers = [
+    (header::ACCEPT_RANGES, "bytes".into()),
+    (header::CONTENT_TYPE, "application/x-nix-nar".into()),
+    (header::CONTENT_LENGTH, file_size.to_string()),
+  ];
+
+  Ok((StatusCode::OK, headers, body))
+}
