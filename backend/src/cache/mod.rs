@@ -12,7 +12,7 @@ mod dedupe;
 mod management;
 mod push;
 mod state;
-mod storage;
+pub mod storage;
 
 pub fn router() -> Router {
   Router::new()

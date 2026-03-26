@@ -75,6 +75,13 @@ impl FileStorage {
     Ok(Self::S3(Arc::new(*bucket)))
   }
 
+  pub fn name(&self) -> &'static str {
+    match self {
+      Self::Local(_) => "Local",
+      Self::S3(_) => "S3",
+    }
+  }
+
   pub async fn save_file<R: AsyncRead + Unpin>(&self, reader: &mut R, nar_id: Uuid) -> Result<()> {
     let name = format!("{}.nar", nar_id);
     match self {

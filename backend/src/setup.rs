@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use tracing::info;
 use uuid::Uuid;
 
-use crate::{auth::jwt_state::JwtState, db::DBTrait};
+use crate::{auth::jwt_state::JwtState, cache::storage::FileStorage, db::DBTrait};
 
 pub fn router() -> Router {
   Router::new()
@@ -128,9 +128,10 @@ async fn complete_setup(
 struct IsSetupResponse {
   is_setup: bool,
   db_backend: String,
+  storage_backend: String,
 }
 
-async fn is_setup(db: Connection) -> Result<Json<IsSetupResponse>> {
+async fn is_setup(db: Connection, storage: FileStorage) -> Result<Json<IsSetupResponse>> {
   let db_backend = match db.0.get_database_backend() {
     sea_orm::DatabaseBackend::Postgres => "PostgreSQL",
     sea_orm::DatabaseBackend::MySql => "MySQL",
@@ -141,5 +142,6 @@ async fn is_setup(db: Connection) -> Result<Json<IsSetupResponse>> {
   Ok(Json(IsSetupResponse {
     is_setup: db.setup().is_setup().await?,
     db_backend,
+    storage_backend: storage.name().to_string(),
   }))
 }
