@@ -1,5 +1,6 @@
 <script lang="ts">
   import {
+    deletePath,
     searchCache,
     SearchOrder,
     SearchSort,
@@ -17,8 +18,10 @@
   let sort: SearchSort = $state(SearchSort.StorePath);
   let order: SearchOrder = $state(SearchOrder.Ascending);
   let paths = $state<SearchResult[]>([]);
+  let searchTrigger = $state(0);
 
   $effect(() => {
+    searchTrigger;
     searchCache(data.cacheInfo.uuid, input, sort, order).then((result) => {
       if (result === undefined) {
         toast.error('Failed to search cache');
@@ -27,6 +30,16 @@
       paths = result;
     });
   });
+
+  const delete_path = async (path: string) => {
+    let res = await deletePath(data.cacheInfo.uuid, path);
+
+    if (res) {
+      toast.error('Failed to delete path');
+    } else {
+      searchTrigger += 1;
+    }
+  };
 </script>
 
 <div class="flex w-full grow flex-col">
@@ -57,5 +70,13 @@
       </Select.Content>
     </Select.Root>
   </div>
-  <Table data={paths} {columns} class="mt-2 min-h-0 grow" />
+  <Table
+    data={paths}
+    {columns}
+    columnData={{
+      write_access: data.cacheInfo.has_write_access,
+      delete_path
+    }}
+    class="mt-2 min-h-0 grow"
+  />
 </div>

@@ -1,8 +1,10 @@
 import type { ColumnDef } from '@tanstack/table-core';
 import { createColumnCell } from 'positron-components/components/table/helpers.svelte';
-import type { SearchResult } from '$lib/backend/cache.svelte';
+import { type SearchResult } from '$lib/backend/cache.svelte';
 import { renderComponent } from 'positron-components/components/ui/data-table';
 import TableHead from './TableHead.svelte';
+import * as DataTable from 'positron-components/components/ui/data-table';
+import Actions from './Actions.svelte';
 
 const createColumn = <T, C>(
   key: string,
@@ -19,7 +21,13 @@ const createColumn = <T, C>(
   };
 };
 
-export const columns = (): ColumnDef<SearchResult>[] => [
+export const columns = ({
+  write_access,
+  delete_path
+}: {
+  write_access: boolean;
+  delete_path: (path: string) => void;
+}): ColumnDef<SearchResult>[] => [
   createColumn('store_path', 'StorePath'),
   createColumn(
     'size',
@@ -39,5 +47,16 @@ export const columns = (): ColumnDef<SearchResult>[] => [
           )
         : 'Never'
   ),
-  createColumn('accessed', 'Access Count')
+  createColumn('accessed', 'Access Count'),
+  {
+    accessorKey: 'actions',
+    header: () => {},
+    cell: ({ row }) => {
+      return DataTable.renderComponent(Actions, {
+        delete_disabled: !write_access,
+        remove: () => delete_path(row.original.store_path)
+      });
+    },
+    enableHiding: false
+  }
 ];

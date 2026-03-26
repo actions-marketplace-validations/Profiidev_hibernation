@@ -265,7 +265,7 @@ impl<'db> NarTable<'db> {
     };
 
     if sort == SearchSort::Size {
-      query = query.order_by(nar::Column::NarSize, order);
+      query = query.order_by(nar::Column::Size, order);
     } else {
       let column = match sort {
         SearchSort::StorePath => nar_info::Column::StorePath,
@@ -289,5 +289,15 @@ impl<'db> NarTable<'db> {
       .into_model::<SearchResult>()
       .all(self.db)
       .await
+  }
+
+  pub async fn delete_path(&self, cache: Uuid, store_path: &str) -> Result<(), DbErr> {
+    nar_info::Entity::delete_many()
+      .filter(nar_info::Column::CacheId.eq(cache))
+      .filter(nar_info::Column::StorePath.eq(store_path.to_string()))
+      .exec(self.db)
+      .await?;
+
+    Ok(())
   }
 }

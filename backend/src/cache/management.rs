@@ -31,6 +31,7 @@ pub fn router() -> Router {
     .route("/{uuid}/search", post(search_store_paths))
     .route("/{uuid}", post(edit_cache))
     .route("/{uuid}", delete(clear_cache))
+    .route("/{uuid}/path", delete(delete_path))
 }
 
 async fn list_caches(auth: JwtAuth, db: Connection) -> Result<Json<Vec<CacheInfo>>> {
@@ -274,5 +275,30 @@ async fn clear_cache(auth: JwtAuth, path: CachePath, db: Connection) -> Result<(
   }
 
   db.cache().clear_cache(path.uuid).await?;
+  Ok(())
+}
+
+#[derive(Deserialize, FromRequest)]
+#[from_request(via(Json))]
+struct DeletePathRequest {
+  store_path: String,
+}
+
+async fn delete_path(
+  auth: JwtAuth,
+  path: CachePath,
+  db: Connection,
+  req: DeletePathRequest,
+) -> Result<()> {
+  if db
+    .cache()
+    .cache_user_access(auth.user_id, path.uuid)
+    .await?
+    != Some(AccessType::Edit)
+  {
+    bail!(FORBIDDEN, "Insufficient permissions");
+  }
+
+  db.nar().delete_path(path.uuid, &req.store_path).await?;
   Ok(())
 }

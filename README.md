@@ -2,7 +2,6 @@
 
 ## TODO
 
-- delete btn for paths in cache in search
 - db index
 - downstream cache configuration
 - cache nix api https://fzakaria.github.io/nix-http-binary-cache-api-spec/#/default/getNarInfo
