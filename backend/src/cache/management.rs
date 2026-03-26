@@ -12,6 +12,7 @@ use uuid::Uuid;
 
 use crate::{
   auth::jwt_auth::JwtAuth,
+  cache::state::CacheEvictionState,
   db::{
     DBTrait,
     cache::{CacheDetails, CacheInfo, SearchOrder, SearchSort},
@@ -190,6 +191,7 @@ async fn edit_cache(
   path: CachePath,
   db: Connection,
   updater: Updater,
+  lock: CacheEvictionState,
   req: EditCacheRequest,
 ) -> Result<()> {
   if req.priority < 0 {
@@ -222,6 +224,22 @@ async fn edit_cache(
     bail!(CONFLICT, "Cache with this name already exists");
   }
 
+  let lock = lock.lock_cache(path.uuid).await;
+  let Some(info) = db.cache().by_id(path.uuid).await? else {
+    bail!("Cache not found");
+  };
+
+  let Some(size) = db.cache().cache_size(path.uuid).await? else {
+    bail!("Cache not found");
+  };
+
+  let diff = size - req.quota;
+  if diff > 0 {
+    db.cache()
+      .evict(path.uuid, diff, info.eviction_policy)
+      .await?;
+  }
+
   db.cache()
     .edit_cache(
       req.name,
@@ -234,6 +252,9 @@ async fn edit_cache(
       path.uuid,
     )
     .await?;
+
+  drop(lock); // Release the cache lock as soon as possible
+
   updater
     .broadcast(UpdateMessage::Cache { uuid: path.uuid })
     .await;
