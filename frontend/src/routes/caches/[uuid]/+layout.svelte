@@ -33,7 +33,7 @@
   <div
     class="flex min-h-0 grow flex-col space-y-4 lg:flex-row lg:space-y-0 lg:space-x-6"
   >
-    <aside class="lg:w-40">
+    <aside class="lg:w-40 lg:min-w-40">
       <SimpleSidebar items={routes} class="" />
     </aside>
     <Separator orientation="horizontal" class="lg:hidden" />

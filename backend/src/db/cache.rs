@@ -10,6 +10,7 @@ use sea_orm::{
   QueryTrait, TransactionTrait, prelude::*,
 };
 use serde::Serialize;
+use url::Url;
 
 use crate::{
   db::group::GroupTable,
@@ -27,7 +28,22 @@ pub struct CacheInfo {
   public: bool,
 }
 
-#[derive(Serialize, FromQueryResult)]
+#[derive(FromQueryResult)]
+pub struct CacheDetailsQuery {
+  id: Uuid,
+  name: String,
+  size: Option<i64>,
+  quota: i64,
+  public: bool,
+  public_signing_key: String,
+  priority: i32,
+  nar_count: i64,
+  allow_force_push: bool,
+  eviction_policy: EvictionPolicy,
+  has_write_access: bool,
+}
+
+#[derive(Serialize)]
 pub struct CacheDetails {
   #[serde(rename = "uuid")]
   id: Uuid,
@@ -43,6 +59,7 @@ pub struct CacheDetails {
   allow_force_push: bool,
   eviction_policy: EvictionPolicy,
   has_write_access: bool,
+  downstream_caches: Vec<Url>,
 }
 
 #[derive(Serialize, FromQueryResult)]
@@ -109,7 +126,7 @@ impl<'db> CacheTable<'db> {
 
     query = apply_user_filter(query, self.db, user, AccessType::View).await?;
 
-    query
+    let res = query
       .group_by(cache::Column::Id)
       .select_only()
       .columns(cache::Column::iter())
@@ -119,9 +136,33 @@ impl<'db> CacheTable<'db> {
         Expr::val(access == Some(AccessType::Edit)),
         "has_write_access",
       )
-      .into_model::<CacheDetails>()
+      .into_model::<CacheDetailsQuery>()
       .one(self.db)
-      .await
+      .await?;
+
+    let Some(res) = res else {
+      return Ok(None);
+    };
+
+    let downstream_caches = self.downstream_caches(res.id).await?;
+
+    Ok(Some(CacheDetails {
+      id: res.id,
+      name: res.name,
+      size: res.size,
+      quota: res.quota,
+      public: res.public,
+      public_signing_key: res.public_signing_key,
+      priority: res.priority,
+      nar_count: res.nar_count,
+      allow_force_push: res.allow_force_push,
+      eviction_policy: res.eviction_policy,
+      has_write_access: res.has_write_access,
+      downstream_caches: downstream_caches
+        .into_iter()
+        .map(|dc| dc.url.parse().unwrap())
+        .collect(),
+    }))
   }
 
   pub async fn by_name(&self, name: String) -> Result<Option<cache::Model>, DbErr> {
@@ -275,6 +316,7 @@ impl<'db> CacheTable<'db> {
     priority: i32,
     allow_force_push: bool,
     eviction_policy: EvictionPolicy,
+    downstream_caches: Vec<Url>,
     cache_id: Uuid,
   ) -> Result<(), DbErr> {
     let mut cache = cache::Entity::find_by_id(cache_id)
@@ -292,6 +334,26 @@ impl<'db> CacheTable<'db> {
     cache.eviction_policy = Set(eviction_policy);
 
     cache.update(self.db).await?;
+
+    downstream_cache::Entity::delete_many()
+      .filter(downstream_cache::Column::CacheId.eq(cache_id))
+      .exec(self.db)
+      .await?;
+
+    let mut new_downstreams = Vec::new();
+    for url in downstream_caches {
+      new_downstreams.push(downstream_cache::ActiveModel {
+        id: Set(Uuid::new_v4()),
+        cache_id: Set(cache_id),
+        url: Set(url.to_string()),
+      });
+    }
+
+    if !new_downstreams.is_empty() {
+      downstream_cache::Entity::insert_many(new_downstreams)
+        .exec(self.db)
+        .await?;
+    }
 
     Ok(())
   }

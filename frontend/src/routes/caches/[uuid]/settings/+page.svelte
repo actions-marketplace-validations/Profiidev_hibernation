@@ -25,9 +25,12 @@
   import LockOpen from '@lucide/svelte/icons/lock-open';
   import { goto } from '$app/navigation';
   import FormSelect from 'positron-components/components/form/form-select.svelte';
+  import { TagsInput } from 'positron-components/components/ui-extra/tags-input';
+  import { Label } from 'positron-components/components/ui/label';
 
   const { data } = $props();
 
+  let downstreamCaches = $derived(data.cacheInfo.downstream_caches);
   let readonly = $derived(!data.cacheInfo.has_write_access);
   let deleteOpen = $state(false);
   let clearOpen = $state(false);
@@ -39,7 +42,8 @@
     let res = await editCache(data.cacheInfo.uuid, {
       ...data.cacheInfo,
       ...form,
-      eviction_policy: form.eviction_policy[0]
+      eviction_policy: form.eviction_policy[0],
+      downstream_caches: downstreamCaches
     });
 
     if (res) {
@@ -173,6 +177,21 @@
                 label: 'Least Frequently Used'
               }
             ]}
+          />
+          <Label class="mb-2">Downstream Caches</Label>
+          <TagsInput
+            placeholder="Add a downstream cache"
+            bind:value={downstreamCaches}
+            suggestions={[
+              'https://cache.nixos.org/',
+              'https://nix-community.cachix.org/',
+              'https://cache.garnix.io/'
+            ]}
+            validate={(val) => {
+              let res = z.url().safeParse(val);
+              if (!res.success) return undefined;
+              return val;
+            }}
           />
           <FormSwitch
             disabled={readonly || props.disabled}

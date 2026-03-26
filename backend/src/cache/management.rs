@@ -8,6 +8,7 @@ use chrono::{DateTime, Utc};
 use entity::sea_orm_active_enums::{AccessType, EvictionPolicy};
 use serde::{Deserialize, Serialize};
 use shared::sig::PublicKey;
+use url::Url;
 use uuid::Uuid;
 
 use crate::{
@@ -186,6 +187,7 @@ struct EditCacheRequest {
   sig_key: String,
   allow_force_push: bool,
   eviction_policy: EvictionPolicy,
+  downstream_caches: Vec<Url>,
 }
 
 async fn edit_cache(
@@ -194,7 +196,7 @@ async fn edit_cache(
   db: Connection,
   updater: Updater,
   lock: CacheEvictionState,
-  req: EditCacheRequest,
+  mut req: EditCacheRequest,
 ) -> Result<()> {
   if req.priority < 0 {
     bail!(BAD_REQUEST, "Priority must be non-negative");
@@ -242,6 +244,9 @@ async fn edit_cache(
       .await?;
   }
 
+  req.downstream_caches.sort_unstable();
+  req.downstream_caches.dedup();
+
   db.cache()
     .edit_cache(
       req.name,
@@ -251,6 +256,7 @@ async fn edit_cache(
       req.priority,
       req.allow_force_push,
       req.eviction_policy,
+      req.downstream_caches,
       path.uuid,
     )
     .await?;

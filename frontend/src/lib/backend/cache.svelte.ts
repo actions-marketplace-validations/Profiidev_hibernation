@@ -32,6 +32,7 @@ export type CacheDetails = CacheInfo & {
   allow_force_push: boolean;
   eviction_policy: EvictionPolicy;
   has_write_access: boolean;
+  downstream_caches: string[];
 };
 
 export const getCacheDetails = async (
@@ -132,6 +133,7 @@ export interface CacheEdit {
   priority: number;
   allow_force_push: boolean;
   eviction_policy: EvictionPolicy;
+  downstream_caches: string[];
 }
 
 export const editCache = async (uuid: string, data: CacheEdit) => {
