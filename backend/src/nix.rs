@@ -10,6 +10,7 @@ use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::{
+  auth::cli_auth::CliAuth,
   cache::storage::FileStorage,
   db::{DBTrait, nar::NarInfoData},
 };
@@ -29,10 +30,29 @@ struct CachePath {
   uuid: Uuid,
 }
 
-async fn nix_cache_info(db: Connection, path: CachePath) -> Result<(HeaderMap, String)> {
+async fn nix_cache_info(
+  db: Connection,
+  path: CachePath,
+  auth: Option<CliAuth>,
+) -> Result<(HeaderMap, String)> {
   let Some(cache) = db.cache().by_id(path.uuid).await? else {
     bail!(NOT_FOUND, "Cache not found");
   };
+
+  if !cache.public {
+    let Some(auth) = auth else {
+      bail!(UNAUTHORIZED, "Authentication required");
+    };
+
+    if db
+      .cache()
+      .cache_user_access(auth.user_id, cache.id)
+      .await?
+      .is_none()
+    {
+      bail!(FORBIDDEN, "Access denied");
+    }
+  }
 
   let mut headers = HeaderMap::new();
   headers.insert("Content-Type", "text/x-nix-cache-info".parse().unwrap());
@@ -56,10 +76,29 @@ struct NarInfoPath {
   path: String,
 }
 
-async fn get_data(db: &Connection, path: NarInfoPath) -> Result<NarInfoData> {
+async fn get_data(
+  db: &Connection,
+  path: NarInfoPath,
+  auth: Option<CliAuth>,
+) -> Result<NarInfoData> {
   let Some(hash) = path.path.strip_suffix(".narinfo") else {
     bail!(NOT_FOUND, "Invalid narinfo path");
   };
+
+  if !db.cache().is_public(path.uuid).await? {
+    let Some(auth) = auth else {
+      bail!(UNAUTHORIZED, "Authentication required");
+    };
+
+    if db
+      .cache()
+      .cache_user_access(auth.user_id, path.uuid)
+      .await?
+      .is_none()
+    {
+      bail!(FORBIDDEN, "Access denied");
+    }
+  }
 
   let Some(data) = db.nar().nar_info_data(path.uuid, hash).await? else {
     bail!(NOT_FOUND, "Narinfo not found");
@@ -68,8 +107,12 @@ async fn get_data(db: &Connection, path: NarInfoPath) -> Result<NarInfoData> {
   Ok(data)
 }
 
-async fn head_nar_info(db: Connection, path: NarInfoPath) -> Result<HeaderMap> {
-  get_data(&db, path).await?;
+async fn head_nar_info(
+  db: Connection,
+  path: NarInfoPath,
+  auth: Option<CliAuth>,
+) -> Result<HeaderMap> {
+  get_data(&db, path, auth).await?;
 
   let mut headers = HeaderMap::new();
   headers.insert("Content-Type", "text/x-nix-narinfo".parse().unwrap());
@@ -77,8 +120,12 @@ async fn head_nar_info(db: Connection, path: NarInfoPath) -> Result<HeaderMap> {
   Ok(headers)
 }
 
-async fn nar_info(db: Connection, path: NarInfoPath) -> Result<(HeaderMap, String)> {
-  let data = get_data(&db, path).await?;
+async fn nar_info(
+  db: Connection,
+  path: NarInfoPath,
+  auth: Option<CliAuth>,
+) -> Result<(HeaderMap, String)> {
+  let data = get_data(&db, path, auth).await?;
   let references = db.nar().nar_info_references(data.id).await?;
 
   let mut headers = HeaderMap::new();
@@ -131,11 +178,27 @@ async fn nar(
   db: Connection,
   path: NarPath,
   storage: FileStorage,
+  auth: Option<CliAuth>,
 ) -> Result<(StatusCode, [(HeaderName, String); 2], Body)> {
   // parse hash as <hash>.nar.<compression>
   let Some((hash, compression)) = path.hash.split_once(".nar.") else {
     bail!(NOT_FOUND, "Invalid nar path");
   };
+
+  if !db.cache().is_public(path.uuid).await? {
+    let Some(auth) = auth else {
+      bail!(UNAUTHORIZED, "Authentication required");
+    };
+
+    if db
+      .cache()
+      .cache_user_access(auth.user_id, path.uuid)
+      .await?
+      .is_none()
+    {
+      bail!(FORBIDDEN, "Access denied");
+    }
+  }
 
   let Some((nar_id, file_size)) = db.nar().get_nar(path.uuid, hash, compression).await? else {
     bail!(NOT_FOUND, "Nar not found");
