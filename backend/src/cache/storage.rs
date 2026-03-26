@@ -1,12 +1,24 @@
 use std::{path::PathBuf, sync::Arc};
 
-use axum::{Extension, extract::FromRequestParts};
-use centaurus::{bail, error::Result, eyre::Context};
-use s3::{Bucket, Region, creds::Credentials};
+use aws_config::Region;
+use aws_sdk_s3::{
+  config::{Credentials, SharedCredentialsProvider},
+  error::SdkError,
+  primitives::ByteStream,
+  types::{CompletedMultipartUpload, CompletedPart},
+};
+use axum::{Extension, body::Body, extract::FromRequestParts};
+use centaurus::{
+  bail,
+  error::{ErrorReportStatusExt, Result},
+  eyre::Context,
+};
+use http::StatusCode;
 use tokio::{
   fs,
-  io::{self, AsyncRead},
+  io::{self, AsyncRead, AsyncReadExt},
 };
+use tokio_util::io::ReaderStream;
 use tracing::info;
 use uuid::Uuid;
 
@@ -16,7 +28,10 @@ use crate::config::StorageConfig;
 #[from_request(via(Extension))]
 pub enum FileStorage {
   Local(PathBuf),
-  S3(Arc<Bucket>),
+  S3 {
+    client: Arc<aws_sdk_s3::Client>,
+    bucket: String,
+  },
 }
 
 impl FileStorage {
@@ -39,50 +54,60 @@ impl FileStorage {
       return Ok(Self::Local(path));
     }
 
-    let region = Region::Custom {
-      region: config.s3_region.clone().unwrap(),
-      endpoint: config.s3_host.clone().unwrap(),
-    };
-
     let credentials = Credentials::new(
-      Some(config.s3_access_key.as_ref().unwrap()),
-      Some(config.s3_secret_key.as_ref().unwrap()),
+      config.s3_access_key.as_ref().unwrap(),
+      config.s3_secret_key.as_ref().unwrap(),
       None,
       None,
-      None,
-    )
-    .context("Failed to create s3 credentials")?;
+      "file_storage",
+    );
 
-    let mut bucket = Bucket::new(config.s3_bucket.as_ref().unwrap(), region, credentials)
-      .context("Failed to create s3 bucket")?;
+    let mut builder = aws_sdk_s3::Config::builder()
+      .region(Some(Region::new(config.s3_region.clone().unwrap())))
+      .endpoint_url(config.s3_host.clone().unwrap())
+      .credentials_provider(SharedCredentialsProvider::new(credentials));
 
     if config.s3_force_path_style {
-      bucket.set_path_style();
+      builder = builder.force_path_style(true);
     }
 
-    if !bucket
-      .exists()
+    let bucket = config.s3_bucket.clone().unwrap();
+    let config = builder.build();
+    let client = aws_sdk_s3::Client::from_conf(config);
+
+    let buckets = client
+      .list_buckets()
+      .send()
       .await
-      .context("Failed to check if S3 Bucket exists")?
+      .context("Failed to list S3 buckets")?;
+
+    if !buckets
+      .buckets()
+      .iter()
+      .any(|b| b.name().unwrap_or_default() == bucket)
     {
       bail!("S3 bucket does not exist");
     }
 
-    info!(
-      "Using S3 file storage with bucket {}",
-      config.s3_bucket.as_ref().unwrap()
-    );
-    Ok(Self::S3(Arc::new(*bucket)))
+    info!("Using S3 file storage with bucket {}", bucket);
+    Ok(Self::S3 {
+      client: Arc::new(client),
+      bucket,
+    })
   }
 
   pub fn name(&self) -> &'static str {
     match self {
       Self::Local(_) => "Local",
-      Self::S3(_) => "S3",
+      Self::S3 { .. } => "S3",
     }
   }
 
-  pub async fn save_file<R: AsyncRead + Unpin>(&self, reader: &mut R, nar_id: Uuid) -> Result<()> {
+  pub async fn save_file<R: AsyncRead + Unpin + Send>(
+    &self,
+    reader: &mut R,
+    nar_id: Uuid,
+  ) -> Result<()> {
     let name = format!("{}.nar", nar_id);
     match self {
       Self::Local(path) => {
@@ -90,18 +115,102 @@ impl FileStorage {
         let mut file = fs::File::create(&file_path).await?;
         io::copy(reader, &mut file).await?;
       }
-      Self::S3(bucket) => {
-        bucket
-          .put_object_stream(reader, &name)
+      Self::S3 { client, bucket } => {
+        const CHUNK_SIZE: usize = 8 * 1024 * 1024; // 8MB
+
+        async fn read_chunk<R: AsyncRead + Unpin + Send>(reader: &mut R) -> Result<Vec<u8>> {
+          let mut buffer = vec![0; CHUNK_SIZE];
+          let mut total_read = 0;
+          while total_read < CHUNK_SIZE {
+            let n = reader.read(&mut buffer[total_read..]).await?;
+            if n == 0 {
+              break;
+            }
+            total_read += n;
+          }
+          buffer.truncate(total_read);
+          Ok(buffer)
+        }
+
+        let first_chunk = read_chunk(reader).await?;
+
+        if first_chunk.len() < CHUNK_SIZE {
+          // If the first chunk is smaller than the chunk size, we can upload it directly
+          client
+            .put_object()
+            .bucket(bucket)
+            .key(&name)
+            .body(ByteStream::from(first_chunk))
+            .send()
+            .await
+            .context("Failed to upload nar to S3 Bucket")?;
+          return Ok(());
+        }
+
+        let multipart_upload = client
+          .create_multipart_upload()
+          .bucket(bucket)
+          .key(&name)
+          .send()
           .await
-          .context("Failed to upload nar to S3 Bucket")?;
+          .context("Failed to create multipart upload for nar in S3 Bucket")?;
+
+        let upload_id = multipart_upload.upload_id().status_context(
+          StatusCode::INTERNAL_SERVER_ERROR,
+          "Failed to get upload ID for multipart upload",
+        )?;
+        let mut parts: Vec<CompletedPart> = Vec::new();
+
+        loop {
+          let chunk = if parts.is_empty() {
+            first_chunk.clone()
+          } else {
+            read_chunk(reader).await?
+          };
+
+          let done = chunk.len() < CHUNK_SIZE;
+          let part_number = (parts.len() + 1) as i32;
+
+          let part = client
+            .upload_part()
+            .bucket(bucket)
+            .key(&name)
+            .upload_id(upload_id)
+            .part_number(part_number)
+            .body(ByteStream::from(chunk))
+            .send()
+            .await
+            .context("Failed to upload part of nar to S3 Bucket")?;
+          let part = CompletedPart::builder()
+            .set_e_tag(part.e_tag().map(|s| s.to_string()))
+            .part_number(part_number)
+            .build();
+          parts.push(part);
+
+          if done {
+            break;
+          }
+        }
+
+        let completed_mulipart_upload = CompletedMultipartUpload::builder()
+          .set_parts(Some(parts))
+          .build();
+        client
+          .complete_multipart_upload()
+          .bucket(bucket)
+          .key(&name)
+          .upload_id(upload_id)
+          .multipart_upload(completed_mulipart_upload)
+          .send()
+          .await
+          .context("Failed to complete multipart upload for nar in S3 Bucket")?;
       }
     }
 
     Ok(())
   }
 
-  pub async fn get_file(&self, nar_id: Uuid) -> Result<Box<dyn AsyncRead + Unpin + Send>> {
+  pub async fn get_file(&self, nar_id: Uuid) -> Result<Body> {
     if !self.exists(nar_id).await? {
       bail!(NOT_FOUND, "Nar file not found");
     }
@@ -111,14 +220,20 @@ impl FileStorage {
       Self::Local(path) => {
         let file_path = path.join(&name);
         let file = fs::File::open(file_path).await?;
-        Ok(Box::new(file) as Box<dyn AsyncRead + Unpin + Send>)
+        Ok(Body::from_stream(ReaderStream::new(file)))
       }
-      Self::S3(bucket) => {
-        let stream = bucket
-          .get_object_stream(&name)
+      Self::S3 { client, bucket } => {
+        let res = client
+          .get_object()
+          .bucket(bucket)
+          .key(&name)
+          .send()
           .await
           .context("Failed to download nar from S3 Bucket")?;
-        Ok(Box::new(stream))
+
+        Ok(Body::from_stream(ReaderStream::new(
+          res.body.into_async_read(),
+        )))
       }
     }
   }
@@ -130,12 +245,21 @@ impl FileStorage {
         let file_path = path.join(&name);
         Ok(file_path.exists())
       }
-      Self::S3(bucket) => {
-        let res = bucket.head_object(&name).await;
+      Self::S3 { client, bucket } => {
+        let res = client.head_object().bucket(bucket).key(&name).send().await;
 
         match res {
           Ok(_) => Ok(true),
-          Err(s3::error::S3Error::HttpFailWithBody(404, _)) => Ok(false),
+          Err(SdkError::ResponseError(r)) => {
+            if r.raw().status().as_u16() == 404 {
+              Ok(false)
+            } else {
+              bail!(
+                "Failed to check nar existence in S3 Bucket: {}",
+                r.into_raw().status()
+              )
+            }
+          }
           Err(e) => Err(e).context("Failed to check nar existence in S3 Bucket")?,
         }
       }
@@ -153,9 +277,12 @@ impl FileStorage {
         let file_path = path.join(&name);
         fs::remove_file(file_path).await?;
       }
-      Self::S3(bucket) => {
-        bucket
-          .delete_object(&name)
+      Self::S3 { client, bucket } => {
+        client
+          .delete_object()
+          .bucket(bucket)
+          .key(&name)
+          .send()
           .await
           .context("Failed to delete nar from S3 Bucket")?;
       }

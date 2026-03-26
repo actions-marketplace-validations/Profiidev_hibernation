@@ -7,7 +7,6 @@ use axum::{
 use centaurus::{bail, db::init::Connection, error::Result};
 use http::{HeaderMap, HeaderName, StatusCode, header};
 use serde::Deserialize;
-use tokio_util::io::ReaderStream;
 use uuid::Uuid;
 
 use crate::{
@@ -43,7 +42,8 @@ async fn nix_cache_info(db: Connection, path: CachePath) -> Result<(HeaderMap, S
     format!(
       "StoreDir: /nix/store
 WantMassQuery: 1
-Priority: {}",
+Priority: {}
+",
       cache.priority
     ),
   ))
@@ -84,6 +84,11 @@ async fn nar_info(db: Connection, path: NarInfoPath) -> Result<(HeaderMap, Strin
   let mut headers = HeaderMap::new();
   headers.insert("Content-Type", "text/x-nix-narinfo".parse().unwrap());
 
+  let compression = match data.compression.as_str() {
+    "zst" => "zstd",
+    _ => bail!(NOT_FOUND, "Unsupported compression format"),
+  };
+
   Ok((
     headers,
     format!(
@@ -95,11 +100,12 @@ FileSize: {}
 NarHash: sha256:{}
 NarSize: {}
 References: {}{}
-Sig: {}",
+Sig: {}
+",
       data.store_path,
       data.hash,
       data.compression,
-      data.compression,
+      compression,
       data.hash,
       data.size,
       data.nar_hash,
@@ -125,7 +131,7 @@ async fn nar(
   db: Connection,
   path: NarPath,
   storage: FileStorage,
-) -> Result<(StatusCode, [(HeaderName, String); 3], Body)> {
+) -> Result<(StatusCode, [(HeaderName, String); 2], Body)> {
   // parse hash as <hash>.nar.<compression>
   let Some((hash, compression)) = path.hash.split_once(".nar.") else {
     bail!(NOT_FOUND, "Invalid nar path");
@@ -136,12 +142,9 @@ async fn nar(
   };
   tracing::info!("Serving nar {} for cache {}", nar_id, path.uuid);
 
-  let stream = storage.get_file(nar_id).await?;
-
-  let body = Body::from_stream(ReaderStream::new(stream));
+  let body = storage.get_file(nar_id).await?;
 
   let headers = [
-    (header::ACCEPT_RANGES, "bytes".into()),
     (header::CONTENT_TYPE, "application/x-nix-nar".into()),
     (header::CONTENT_LENGTH, file_size.to_string()),
   ];
