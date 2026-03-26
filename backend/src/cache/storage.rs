@@ -250,17 +250,14 @@ impl FileStorage {
 
         match res {
           Ok(_) => Ok(true),
-          Err(SdkError::ResponseError(r)) => {
-            if r.raw().status().as_u16() == 404 {
+          Err(SdkError::ServiceError(e)) => {
+            if e.err().is_not_found() {
               Ok(false)
             } else {
-              bail!(
-                "Failed to check nar existence in S3 Bucket: {}",
-                r.into_raw().status()
-              )
+              bail!("Failed to check nar existence in S3 Bucket: {}", e.err())
             }
           }
-          Err(e) => Err(e).context("Failed to check nar existence in S3 Bucket")?,
+          Err(e) => Err(dbg!(e)).context("Failed to check nar existence in S3 Bucket")?,
         }
       }
     }
