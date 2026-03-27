@@ -98,7 +98,7 @@ Or in you nix config:
 
 4. Use the following command from the cli to push paths (all missing configuration will be prompted for):
    ```bash
-   hibernation push /nix/store/your-store-path
+   hibernation push <cache-name> /nix/store/your-store-path
    ```
 
 ## Deployment
@@ -135,4 +135,5 @@ Once running, the services will be available at:
 - github action for cache and cli setup
 - nix api support byte range queries
 - add overview page in frontend
+- add support for virtual host based cache access (requires more restrictions on cache names)
 - nix store watch mode in cli + auto push + example in cache page
