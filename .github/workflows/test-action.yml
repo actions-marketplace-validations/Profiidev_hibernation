@@ -25,7 +25,7 @@ jobs:
       - name: Verify Installation
         if: matrix.version != 'latest'
         run: |
-          RAW_VERSION=${{ github.event.inputs.version }}
+          RAW_VERSION=${{ matrix.version }}
           VERSION="${RAW_VERSION#v}"
           hibernation --version | grep $VERSION
 
