@@ -2130,7 +2130,10 @@ function Me() {
       if ((typeof I == 'function' && ((p = I), (I = null)), p === void 0))
         return new Promise((L, T) => {
           this.destroy(I, (Y, v) =>
-            Y ? /* istanbul ignore next: should never error */ T(Y) : L(v)
+            Y
+              ? /* istanbul ignore next: should never error */
+                T(Y)
+              : L(v)
           );
         });
       if (typeof p != 'function') throw new n('invalid callback');
@@ -20005,8 +20008,8 @@ const oQ = async () => {
   const Q = `hibernation-${e}-${s}${t === 'linux' ? '-gnu' : ''}.tar.gz`,
     g =
       A === 'latest'
-        ? `https://github.com/repos/${i}/releases/latest/download/${Q}`
-        : `https://github.com/repos/${i}/releases/download/${A}/${Q}`;
+        ? `https://github.com/${i}/releases/latest/download/${Q}`
+        : `https://github.com/${i}/releases/download/${A}/${Q}`;
   Ke(`Downloading ${Q} from ${g}`);
   const a = await rQ(g),
     r = await sQ(a);

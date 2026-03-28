@@ -37,8 +37,8 @@ const run = async () => {
 
   const url =
     version === 'latest'
-      ? `https://github.com/repos/${repo}/releases/latest/download/${assetName}`
-      : `https://github.com/repos/${repo}/releases/download/${version}/${assetName}`;
+      ? `https://github.com/${repo}/releases/latest/download/${assetName}`
+      : `https://github.com/${repo}/releases/download/${version}/${assetName}`;
 
   core.info(`Downloading ${assetName} from ${url}`);
 
