@@ -1,4 +1,4 @@
-name: Test Setup ACtion
+name: Test Setup Action
 on:
   pull_request:
 
@@ -25,7 +25,9 @@ jobs:
       - name: Verify Installation
         if: matrix.version != 'latest'
         run: |
-          hibernation --version | grep ${{ matrix.version }}
+          RAW_VERSION=${{ github.event.inputs.version }}
+          VERSION="${RAW_VERSION#v}"
+          hibernation --version | grep $VERSION
 
       - name: Verify Latest Installation
         if: matrix.version == 'latest'
