@@ -31,6 +31,7 @@ jobs:
           cargo metadata -q > /dev/null
           cd frontend && npm version $NEW_VERSION --no-git-tag-version
           cd ../action && npm version $NEW_VERSION --no-git-tag-version && npm run build
+          cd .. && npx -y prettier -cw .
 
       - name: Create PR
         uses: peter-evans/create-pull-request@v8
