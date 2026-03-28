@@ -17,7 +17,7 @@ jobs:
     name: Test Setup Action on ${{ matrix.os }} with version ${{ matrix.version }}
     steps:
       - name: Setup Cli
-        uses: .
+        uses: ./
         with:
           version: ${{ matrix.version }}
 
