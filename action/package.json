@@ -4,7 +4,7 @@
   "version": "0.1.2",
   "type": "module",
   "scripts": {
-    "build": "vite build && prettier -cw .",
+    "build": "vite build",
     "format": "prettier --write .",
     "lint": "prettier --check ."
   },
