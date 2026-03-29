@@ -25,6 +25,7 @@ pub struct Config {
 
   pub db_url: String,
   pub site_url: Url,
+  pub virtual_host_routing: bool,
 
   pub auth_pepper: String,
   pub auth_issuer: String,
@@ -38,6 +39,7 @@ impl Default for Config {
       db: DBConfig::default(),
       db_url: "".to_string(),
       site_url: Url::parse("http://localhost:8000").unwrap(),
+      virtual_host_routing: false,
       metrics: MetricsConfig {
         metrics_name: "hibernation".to_string(),
         ..Default::default()

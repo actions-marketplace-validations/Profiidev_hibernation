@@ -3,6 +3,16 @@
 version = 4
 
 [[package]]
+name = "addr"
+version = "0.15.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a93b8a41dbe230ad5087cc721f8d41611de654542180586b315d9f4cf6b72bef"
+dependencies = [
+ "psl",
+ "psl-types",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -890,6 +900,7 @@ dependencies = [
 name = "backend"
 version = "0.1.2"
 dependencies = [
+ "addr",
  "argon2",
  "async-compression",
  "aws-config",
@@ -924,6 +935,7 @@ dependencies = [
  "time",
  "tokio",
  "tokio-util",
+ "tower-service",
  "tower_governor",
  "tracing",
  "url",
@@ -4099,6 +4111,21 @@ dependencies = [
  "parking_lot",
  "thiserror 2.0.18",
 ]
+
+[[package]]
+name = "psl"
+version = "2.1.199"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70b63978a2742d3f662188698ab45854156e7e34658f53fa951e9253a3dfd583"
+dependencies = [
+ "psl-types",
+]
+
+[[package]]
+name = "psl-types"
+version = "2.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33cb294fe86a74cbcf50d4445b37da762029549ebeea341421c7c70370f86cac"
 
 [[package]]
 name = "psm"

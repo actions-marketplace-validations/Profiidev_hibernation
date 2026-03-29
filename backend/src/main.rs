@@ -1,8 +1,10 @@
-use axum::{Extension, Router};
+use std::net::SocketAddr;
+
+use axum::{Extension, Router, ServiceExt, serve};
 use centaurus::{
   db::init::init_db,
   init::{
-    axum::{listener_setup, run_app_connect_info},
+    axum::{listener_setup, run_app_connect_info, shutdown_signal},
     logging::init_logging,
     router::base_router,
   },
@@ -11,7 +13,7 @@ use centaurus::{
 use dotenvy::dotenv;
 use tracing::info;
 
-use crate::{config::Config, rate_limit::RateLimiter};
+use crate::{config::Config, host::HostRouter, rate_limit::RateLimiter};
 
 mod auth;
 mod cache;
@@ -20,6 +22,7 @@ mod config;
 mod db;
 mod gravatar;
 mod group;
+mod host;
 mod mail;
 mod nix;
 mod permissions;
@@ -44,12 +47,22 @@ async fn main() {
 
   let mut router = api_router(&mut rate_limiter);
   router = base_router(router, &config.base, &config.metrics).await;
-  let app = state(router, config).await;
+  let app = state(router, config.clone()).await;
 
   rate_limiter.init();
 
   info!("Starting application");
-  run_app_connect_info(listener, app).await;
+  if let Some(host_router) = HostRouter::new(&app, &config) {
+    serve(
+      listener,
+      host_router.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await
+    .expect("Failed to start server");
+  } else {
+    run_app_connect_info(listener, app).await;
+  }
 }
 
 fn api_router(rate_limiter: &mut RateLimiter) -> Router {
