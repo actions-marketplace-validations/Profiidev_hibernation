@@ -5,7 +5,7 @@ const getSettings = async <T>(name: string, fetch: typeof window.fetch) => {
     res_type: ResponseType.Json,
     fetch
   });
-  if (typeof res === 'object') {
+  if (typeof res !== 'string') {
     return res;
   }
 };
@@ -19,11 +19,9 @@ const saveSettings = async <T>(name: string, settings: T) => {
 export interface GeneralSettings {
   site_url: string;
 }
+
 export const getGeneralSettings = async (fetch: typeof window.fetch) => {
   return await getSettings<GeneralSettings>('general', fetch);
-};
-export const saveGeneralSettings = async (settings: GeneralSettings) => {
-  return await saveSettings<GeneralSettings>('general', settings);
 };
 
 export interface UserSettings {

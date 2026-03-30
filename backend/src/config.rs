@@ -1,3 +1,4 @@
+use axum::{Extension, extract::FromRequestParts};
 use centaurus::{
   config::{BaseConfig, MetricsConfig},
   db::config::DBConfig,
@@ -8,8 +9,10 @@ use figment::{
 };
 use serde::{Deserialize, Serialize};
 use tracing::{instrument, warn};
+use url::Url;
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, FromRequestParts)]
+#[from_request(via(Extension))]
 pub struct Config {
   #[serde(flatten)]
   pub base: BaseConfig,
@@ -21,6 +24,8 @@ pub struct Config {
   pub storage: StorageConfig,
 
   pub db_url: String,
+  pub site_url: Url,
+  pub virtual_host_routing: bool,
 
   pub auth_pepper: String,
   pub auth_issuer: String,
@@ -33,6 +38,8 @@ impl Default for Config {
       base: BaseConfig::default(),
       db: DBConfig::default(),
       db_url: "".to_string(),
+      site_url: Url::parse("http://localhost:8000").unwrap(),
+      virtual_host_routing: false,
       metrics: MetricsConfig {
         metrics_name: "hibernation".to_string(),
         ..Default::default()

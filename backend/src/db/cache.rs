@@ -167,7 +167,7 @@ impl<'db> CacheTable<'db> {
 
   pub async fn by_name(&self, name: String) -> Result<Option<cache::Model>, DbErr> {
     cache::Entity::find()
-      .filter(cache::Column::Name.eq(name))
+      .filter(Func::lower(Expr::col(cache::Column::Name)).eq(name.to_lowercase()))
       .one(self.db)
       .await
   }
@@ -458,11 +458,6 @@ impl<'db> CacheTable<'db> {
     self.db.query_all(builder.build(&delete_query)).await?;
 
     Ok(())
-  }
-
-  pub async fn is_public(&self, cache: Uuid) -> Result<bool, DbErr> {
-    let cache = cache::Entity::find_by_id(cache).one(self.db).await?;
-    Ok(cache.is_some_and(|c| c.public))
   }
 }
 
