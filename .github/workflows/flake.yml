@@ -8,12 +8,19 @@ on:
 
 jobs:
   flake-build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-latest
     steps:
       - uses: actions/checkout@v6
       - uses: cachix/install-nix-action@v31
       - name: Install Hibernation CLI
         uses: profiidev/hibernation@v0
+        #if: github.event_name != 'pull_request'
         with:
           url: ${{ secrets.HIBERNATION_URL }}
           token: ${{ secrets.HIBERNATION_TOKEN }}
@@ -24,6 +31,4 @@ jobs:
 
       - name: Cache results
         #if: github.event_name != 'pull_request'
-        run: |
-          RESULT_PATH=$(readlink result)
-          hibernation push projects $RESULT_PATH
+        run: hibernation push projects $(readlink result)

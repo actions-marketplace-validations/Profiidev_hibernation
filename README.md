@@ -171,3 +171,4 @@ Once running, the services will be available at:
 
 - add overview page in frontend
 - nix store watch mode in cli + auto push + example in cache page
+- cli paths from stdin
