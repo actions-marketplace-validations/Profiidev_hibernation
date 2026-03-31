@@ -9,7 +9,7 @@ pub struct UploadInfoRequest {
   pub force: bool,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct UploadInfoResponse {
   pub paths: Vec<StorePath>,
   pub cache: Uuid,
