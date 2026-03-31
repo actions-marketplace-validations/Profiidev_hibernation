@@ -139,7 +139,7 @@ async fn upload_info(
   while let Some(downstream) = downstream_caches.pop() {
     let mut futures = Vec::new();
 
-    for path in &missing_paths {
+    for path in missing_paths {
       let url = Url::parse(&downstream.url)
         .unwrap()
         .join(&format!("{}.narinfo", path.hash()))?;
@@ -148,21 +148,23 @@ async fn upload_info(
 
       futures.push(async move {
         let Ok(res) = res_future.await else {
-          return false;
+          return (false, path);
         };
         let Ok(res) = res.error_for_status() else {
-          return false;
+          return (false, path);
         };
 
-        res.status() == reqwest::StatusCode::OK
+        (res.status() == reqwest::StatusCode::OK, path)
       });
     }
 
     let results = FuturePool::new(futures).run().await;
     let mut remaining_missing = Vec::new();
 
-    for (path, exists) in missing_paths.into_iter().zip(results) {
-      if !exists.unwrap_or(false) {
+    for result in results.into_iter() {
+      if let Ok((exists, path)) = result
+        && !exists
+      {
         remaining_missing.push(path);
       }
     }
