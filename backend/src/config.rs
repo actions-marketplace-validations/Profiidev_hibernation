@@ -1,7 +1,7 @@
 use aide::OperationIo;
 use axum::{Extension, extract::FromRequestParts};
 use centaurus::{
-  config::{BaseConfig, MetricsConfig},
+  backend::config::{BaseConfig, MetricsConfig},
   db::config::DBConfig,
 };
 use figment::{
@@ -31,6 +31,16 @@ pub struct Config {
   pub auth_pepper: String,
   pub auth_issuer: String,
   pub auth_jwt_expiration: i64,
+}
+
+impl centaurus::backend::config::Config for Config {
+  fn base(&self) -> &BaseConfig {
+    &self.base
+  }
+
+  fn metrics(&self) -> &MetricsConfig {
+    &self.metrics
+  }
 }
 
 impl Default for Config {

@@ -1,5 +1,5 @@
 use aide::axum::ApiRouter;
-use axum::{Extension, Router};
+use axum::Extension;
 
 use crate::ws::state::{UpdateState, Updater};
 
@@ -10,7 +10,7 @@ pub fn router() -> ApiRouter {
   ApiRouter::new().merge(updater::router())
 }
 
-pub async fn state(router: Router) -> (Router, Updater) {
+pub async fn state(router: ApiRouter) -> (ApiRouter, Updater) {
   let (state, updater) = UpdateState::init().await;
 
   (

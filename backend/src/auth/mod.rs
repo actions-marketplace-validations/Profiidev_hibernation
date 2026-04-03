@@ -1,6 +1,8 @@
 use aide::axum::ApiRouter;
-use axum::{Extension, Router};
-use centaurus::{auth::pw::PasswordState, db::init::Connection};
+use axum::Extension;
+use centaurus::{
+  auth::pw::PasswordState, backend::rate_limiter::RateLimiter, db::init::Connection,
+};
 use rsa::{
   RsaPrivateKey,
   pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
@@ -17,7 +19,6 @@ use crate::{
   },
   config::Config,
   db::DBTrait,
-  rate_limit::RateLimiter,
 };
 
 pub mod cli_auth;
@@ -39,7 +40,7 @@ pub fn router(rate_limiter: &mut RateLimiter) -> ApiRouter {
     .nest("/config", config::router())
 }
 
-pub async fn state(router: Router, config: &Config, db: &Connection) -> Router {
+pub async fn state(router: ApiRouter, config: &Config, db: &Connection) -> ApiRouter {
   let pw_state = init_pw_state(config, db).await;
   let jwt_state = JwtState::init(config, db).await;
   let oidc_state = OidcState::new(db).await;

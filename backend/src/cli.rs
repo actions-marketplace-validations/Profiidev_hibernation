@@ -11,10 +11,13 @@ use aide::{
   },
 };
 use axum::{
-  Extension, Json, Router,
+  Extension, Json,
   extract::{FromRequestParts, Query},
 };
-use centaurus::{auth::pw::PasswordState, bail, db::init::Connection, error::Result};
+use centaurus::{
+  auth::pw::PasswordState, backend::rate_limiter::RateLimiter, bail, db::init::Connection,
+  error::Result,
+};
 use chrono::Utc;
 use dashmap::DashMap;
 use rand::{RngExt, distr::Alphanumeric};
@@ -27,7 +30,6 @@ use uuid::Uuid;
 use crate::{
   auth::{cli_auth::CLI_TOKEN_LEN, jwt_auth::JwtAuth, jwt_state::JwtState},
   db::DBTrait,
-  rate_limit::RateLimiter,
   ws::state::{UpdateMessage, Updater},
 };
 
@@ -38,7 +40,7 @@ pub fn router(rate_limiter: &mut RateLimiter) -> ApiRouter {
     .api_route("/", post(new_code))
 }
 
-pub fn state(router: Router) -> Router {
+pub fn state(router: ApiRouter) -> ApiRouter {
   let cli_state = CliState {
     codes: Arc::new(DashMap::new()),
   };

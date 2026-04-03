@@ -4,7 +4,10 @@ use aide::axum::{
 };
 use axum::Json;
 use axum_extra::extract::CookieJar;
-use centaurus::{auth::pw::PasswordState, bail, db::init::Connection, error::Result};
+use centaurus::{
+  auth::pw::PasswordState, backend::rate_limiter::RateLimiter, bail, db::init::Connection,
+  error::Result,
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use tower_governor::GovernorLayer;
@@ -14,7 +17,6 @@ use uuid::Uuid;
 use crate::{
   auth::{jwt_state::JwtState, res::TokenRes},
   db::DBTrait,
-  rate_limit::RateLimiter,
 };
 
 pub fn router(rate_limiter: &mut RateLimiter) -> ApiRouter {
