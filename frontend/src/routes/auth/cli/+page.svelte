@@ -5,7 +5,7 @@
   import { Button } from 'positron-components/components/ui/button';
   import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
   import { newCode } from '$lib/client';
-  import { sendCliCode } from '$lib/backend/mail.svelte.js';
+  import { sendCliCode } from '$lib/backend/util.svelte.js';
 
   type CliAuthStatus =
     | 'Requesting'
@@ -29,7 +29,7 @@
       error = false;
       status = 'Success';
       code = res.data.code;
-      let ret = await sendCliCode(res.data.code, data.user?.uuid ?? '');
+      let ret = await sendCliCode(res.data.code);
       if (!ret) {
         status = 'Finished';
         window.close();

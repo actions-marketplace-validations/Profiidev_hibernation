@@ -70,7 +70,7 @@
     columnData={{
       deleteGroup: startDeleteGroup,
       user: data.user,
-      admin_group: data.admin_group
+      admin_group: data.admin_group ?? undefined
     }}
   />
 </div>

@@ -2,7 +2,7 @@
   import { Progress } from 'positron-components/components/ui/progress';
   import * as Code from '$lib/components/code';
   import { ScrollArea } from 'positron-components/components/ui/scroll-area';
-  import { size_to_gib } from '$lib/backend/mail.svelte.js';
+  import { size_to_gib } from '$lib/backend/util.svelte.js';
 
   let { data } = $props();
 

@@ -21,12 +21,17 @@
   import Save from '@lucide/svelte/icons/save';
   import { Spinner } from 'positron-components/components/ui/spinner';
   import FormSelect from 'positron-components/components/form/form-select.svelte';
-  import { resetUserPassword } from '$lib/backend/user.svelte.js';
   import SimpleAvatar from 'positron-components/components/util/simple-avatar.svelte';
   import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
   import FormInputPassword from '$lib/components/form/FormInputPassword.svelte';
   import CacheAccess from '../../groups/[uuid]/CacheAccess.svelte';
-  import { deleteUser, editUser, resetUserAvatar } from '$lib/client';
+  import {
+    deleteUser,
+    editUser,
+    resetUserAvatar,
+    resetUserPassword
+  } from '$lib/client';
+  import { getEncrypt } from '$lib/backend/auth.svelte.js';
 
   const { data } = $props();
 
@@ -90,13 +95,20 @@
   };
 
   const resetPasswordSubmit = async (form: FormValue<typeof resetPassword>) => {
+    let encrypt = getEncrypt();
+    if (!encrypt) {
+      return { error: 'Encryption function not available' };
+    }
+
     let res = await resetUserPassword({
-      uuid: data.userInfo.uuid,
-      new_password: form.new_password
+      body: {
+        uuid: data.userInfo.uuid,
+        new_password: encrypt.encrypt(form.new_password) || ''
+      }
     });
 
-    if (res) {
-      if (res === RequestError.Forbidden) {
+    if (res.error) {
+      if (res.response.status === 403) {
         return { error: 'You do not have permission to reset this password' };
       } else {
         return { error: 'Failed to reset password' };

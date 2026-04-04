@@ -8,7 +8,7 @@
   import LockOpen from '@lucide/svelte/icons/lock-open';
   import { Badge } from 'positron-components/components/ui/badge';
   import { Progress } from 'positron-components/components/ui/progress';
-  import { size_to_gib } from '$lib/backend/mail.svelte.js';
+  import { size_to_gib } from '$lib/backend/util.svelte.js';
 
   const { data } = $props();
 
