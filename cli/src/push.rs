@@ -54,7 +54,12 @@ pub async fn push_paths(
     .iter()
     .map(|s| s.trim())
     .filter(|s| !s.is_empty())
-    .flat_map(|s| store_dir.parse(s).ok())
+    .flat_map(|s| {
+      store_dir.parse(s).ok().or_else(|| {
+        error!("Invalid store path: {}, skipping.", s);
+        None
+      })
+    })
     .collect::<Vec<StorePath>>();
 
   let mut visited = HashSet::new();
@@ -62,7 +67,10 @@ pub async fn push_paths(
 
   while let Some(path) = queue.pop() {
     if visited.insert(path.clone()) {
-      let info = conn.query_path_info(&path).await.unwrap().unwrap();
+      let Some(info) = conn.query_path_info(&path).await.unwrap() else {
+        error!("Path {} not found in local store, skipping.", path);
+        continue;
+      };
 
       path_infos.push(PathInfo {
         store_path: path,
