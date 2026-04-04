@@ -935,7 +935,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "base64",
- "centaurus 0.4.13 (git+https://github.com/Profiidev/centaurus?rev=e286c157fecabc8af2650d75f07746a5a2fefd56)",
+ "centaurus 0.5.0",
  "chrono",
  "dashmap",
  "dotenvy",
@@ -1212,7 +1212,7 @@ version = "0.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f845b36d76c394c2fbdc710ffb4b900fab86b41cb361c20cf06671d2406872b"
 dependencies = [
- "centaurus-derive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "centaurus-derive",
  "color-eyre",
  "eyre",
  "reqwest",
@@ -1226,8 +1226,9 @@ dependencies = [
 
 [[package]]
 name = "centaurus"
-version = "0.4.13"
-source = "git+https://github.com/Profiidev/centaurus?rev=e286c157fecabc8af2650d75f07746a5a2fefd56#e286c157fecabc8af2650d75f07746a5a2fefd56"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9605a94c19b372229f05c2d53dcc3ad5d1e2213495690a09b337d8e5727d6e1f"
 dependencies = [
  "aide",
  "argon2",
@@ -1235,7 +1236,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "base64",
- "centaurus-derive 0.1.0 (git+https://github.com/Profiidev/centaurus?rev=e286c157fecabc8af2650d75f07746a5a2fefd56)",
+ "centaurus-derive",
  "color-eyre",
  "dashmap",
  "eyre",
@@ -1269,18 +1270,9 @@ dependencies = [
 
 [[package]]
 name = "centaurus-derive"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4cff23771da27b5c70a187ba9a1245be9d556cb2d309b74521cd89dcdac3f4d"
-dependencies = [
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
-name = "centaurus-derive"
-version = "0.1.0"
-source = "git+https://github.com/Profiidev/centaurus?rev=e286c157fecabc8af2650d75f07746a5a2fefd56#e286c157fecabc8af2650d75f07746a5a2fefd56"
+checksum = "7f8afeec2bad4042e6a1691e859c72236ca3bb926526757afe304c980e0d9c65"
 dependencies = [
  "quote",
  "syn 2.0.117",
@@ -2783,7 +2775,7 @@ version = "0.2.2"
 dependencies = [
  "async-compression",
  "bytes",
- "centaurus 0.4.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "centaurus 0.4.13",
  "clap",
  "color-eyre",
  "dirs",
