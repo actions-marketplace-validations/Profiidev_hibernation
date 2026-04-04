@@ -1,5 +1,5 @@
 import type JSEncrypt from 'jsencrypt';
-import { RequestError } from 'positron-components/backend';
+import { get, RequestError, ResponseType } from 'positron-components/backend';
 import { browser } from '$app/environment';
 import { key as getKey } from '$lib/client';
 
@@ -25,3 +25,13 @@ export const fetchKey = async () => {
   encrypt.setPublicKey(keyData.key);
 };
 fetchKey();
+
+export const getOidcUrl = async () => {
+  let res = await get<{ url: string }>('/api/auth/oidc/url', {
+    res_type: ResponseType.Json
+  });
+
+  if (typeof res === 'object') {
+    return res.url;
+  }
+};
