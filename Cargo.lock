@@ -935,7 +935,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "base64",
- "centaurus 0.5.0",
+ "centaurus 0.5.0 (git+https://github.com/ProfiiDev/centaurus?rev=e505ff4808f777a46f82a347b1eaa0139d07fb1a)",
  "chrono",
  "dashmap",
  "dotenvy",
@@ -1208,11 +1208,11 @@ dependencies = [
 
 [[package]]
 name = "centaurus"
-version = "0.4.13"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f845b36d76c394c2fbdc710ffb4b900fab86b41cb361c20cf06671d2406872b"
+checksum = "9605a94c19b372229f05c2d53dcc3ad5d1e2213495690a09b337d8e5727d6e1f"
 dependencies = [
- "centaurus-derive",
+ "centaurus-derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "color-eyre",
  "eyre",
  "reqwest",
@@ -1227,16 +1227,17 @@ dependencies = [
 [[package]]
 name = "centaurus"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9605a94c19b372229f05c2d53dcc3ad5d1e2213495690a09b337d8e5727d6e1f"
+source = "git+https://github.com/ProfiiDev/centaurus?rev=e505ff4808f777a46f82a347b1eaa0139d07fb1a#e505ff4808f777a46f82a347b1eaa0139d07fb1a"
 dependencies = [
+ "addr",
  "aide",
  "argon2",
  "async-trait",
  "axum",
  "axum-extra",
  "base64",
- "centaurus-derive",
+ "centaurus-derive 0.1.1 (git+https://github.com/ProfiiDev/centaurus?rev=e505ff4808f777a46f82a347b1eaa0139d07fb1a)",
+ "chrono",
  "color-eyre",
  "dashmap",
  "eyre",
@@ -1247,10 +1248,12 @@ dependencies = [
  "image",
  "jsonwebtoken",
  "lettre",
+ "md5",
  "metrics",
  "metrics-exporter-prometheus",
  "reqwest",
  "rsa",
+ "schemars 1.2.1",
  "sea-orm",
  "sea-orm-migration",
  "serde",
@@ -1260,6 +1263,7 @@ dependencies = [
  "tokio",
  "tower",
  "tower-http",
+ "tower-service",
  "tower_governor",
  "tracing",
  "tracing-error",
@@ -1276,6 +1280,25 @@ checksum = "7f8afeec2bad4042e6a1691e859c72236ca3bb926526757afe304c980e0d9c65"
 dependencies = [
  "quote",
  "syn 2.0.117",
+]
+
+[[package]]
+name = "centaurus-derive"
+version = "0.1.1"
+source = "git+https://github.com/ProfiiDev/centaurus?rev=e505ff4808f777a46f82a347b1eaa0139d07fb1a#e505ff4808f777a46f82a347b1eaa0139d07fb1a"
+dependencies = [
+ "centaurus-macro-utils",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "centaurus-macro-utils"
+version = "0.1.0"
+source = "git+https://github.com/ProfiiDev/centaurus?rev=e505ff4808f777a46f82a347b1eaa0139d07fb1a#e505ff4808f777a46f82a347b1eaa0139d07fb1a"
+dependencies = [
+ "syn 2.0.117",
+ "toml_edit",
 ]
 
 [[package]]
@@ -2775,7 +2798,7 @@ version = "0.2.2"
 dependencies = [
  "async-compression",
  "bytes",
- "centaurus 0.4.13",
+ "centaurus 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap",
  "color-eyre",
  "dirs",
@@ -3590,6 +3613,7 @@ name = "migration"
 version = "0.1.0"
 dependencies = [
  "async-std",
+ "centaurus 0.5.0 (git+https://github.com/ProfiiDev/centaurus?rev=e505ff4808f777a46f82a347b1eaa0139d07fb1a)",
  "sea-orm-migration",
 ]
 

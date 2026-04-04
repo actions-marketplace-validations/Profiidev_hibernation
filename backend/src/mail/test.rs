@@ -1,13 +1,9 @@
 use aide::axum::ApiRouter;
 use aide::axum::routing::post_with;
-use centaurus::{db::init::Connection, error::Result};
+use centaurus::{db::init::Connection, error::Result, mail::Mailer};
 
 use crate::{
-  auth::jwt_auth::JwtAuth,
-  config::Config,
-  db::DBTrait,
-  mail::{state::Mailer, templates},
-  permissions::SettingsEdit,
+  auth::jwt_auth::JwtAuth, config::Config, db::DBTrait, mail::templates, permissions::SettingsEdit,
 };
 
 pub fn router() -> ApiRouter {

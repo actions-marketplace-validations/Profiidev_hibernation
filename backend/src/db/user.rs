@@ -51,7 +51,7 @@ impl<'db> UserTable<'db> {
     password: String,
     salt: String,
   ) -> centaurus::error::Result<Uuid> {
-    let url = crate::gravatar::get_gravatar_url(&email);
+    let url = centaurus::gravatar::get_gravatar_url(&email);
     let data = match reqwest::get(&url).await {
       Ok(response) => {
         if response.status().is_success() {

@@ -5,24 +5,24 @@ use centaurus::{
     init::{listener_setup, run_app_connect_info},
     rate_limiter::RateLimiter,
     router::build_router,
+    virtual_host::HostRouter,
   },
   db::init::init_db,
   logging::init_logging,
+  version_header,
 };
 #[cfg(debug_assertions)]
 use dotenvy::dotenv;
 use tracing::info;
 
-use crate::{config::Config, host::HostRouter};
+use crate::config::Config;
 
 mod auth;
 mod cache;
 mod cli;
 mod config;
 mod db;
-mod gravatar;
 mod group;
-mod host;
 mod mail;
 mod nix;
 mod permissions;
@@ -30,7 +30,6 @@ mod settings;
 mod setup;
 mod token;
 mod user;
-mod version;
 mod ws;
 
 #[tokio::main]
@@ -42,12 +41,14 @@ async fn main() {
   init_logging(config.base.log_level);
 
   let listener = listener_setup(config.base.port).await;
-  let app = build_router(api_router, state, config.clone()).await;
+  let mut app = build_router(api_router, state, config.clone()).await;
+  version_header!(app);
 
-  info!("Starting application");
-  if let Some(host_router) = HostRouter::new(&app, &config) {
+  if config.virtual_host_routing {
+    let host_router = HostRouter::new(app, config.site_url, "/api/nix/{subdomain}{path}".into());
     run_app_connect_info(listener, host_router).await;
   } else {
+    info!("Starting application");
     run_app_connect_info(listener, app).await;
   }
 }
@@ -69,7 +70,6 @@ fn api_router(rate_limiter: &mut RateLimiter) -> ApiRouter {
 
 async fn state(router: ApiRouter, config: Config) -> ApiRouter {
   let db = init_db::<migration::Migrator>(&config.db, &config.db_url).await;
-  db::init(&db).await.expect("Failed to initialize database");
   setup::create_admin_group(&db)
     .await
     .expect("Failed to create admin group");
@@ -79,7 +79,6 @@ async fn state(router: ApiRouter, config: Config) -> ApiRouter {
   router = mail::state(router, &db).await;
   router = cli::state(router);
   router = cache::state(router, db.clone(), &config).await;
-  router = version::middleware(router);
 
   router.layer(Extension(db))
 }

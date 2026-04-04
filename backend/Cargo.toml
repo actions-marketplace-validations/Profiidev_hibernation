@@ -19,7 +19,8 @@ centaurus = { features = [
   "lettre",
   "url",
   "image",
-], version = "0.5.0" }
+  "gravatar",
+], git = "https://github.com/ProfiiDev/centaurus", rev = "e505ff4808f777a46f82a347b1eaa0139d07fb1a" }
 uuid = { version = "1.23.0", features = ["v4"] }
 entity = { path = "entity" }
 migration = { path = "migration" }
@@ -31,7 +32,7 @@ sea-orm = { version = "1.1.20", features = [
 axum = { version = "0.8.8", features = ["macros", "ws", "tracing"] }
 axum-extra = { version = "0.12.5", features = ["cookie", "typed-header"] }
 tracing = "0.1.44"
-tokio = { version = "1.50.0", features = ["signal"] }
+tokio = { version = "1.51.0", features = ["signal"] }
 http = "1.4.0"
 dotenvy = "0.15.7"
 serde = { version = "1.0.228", features = ["derive"] }
@@ -46,7 +47,7 @@ argon2 = "0.5.3"
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
 time = "0.3.47"
 url = { version = "2.5.8", features = ["serde"] }
-lettre = { version = "0.11.20", default-features = false, features = [
+lettre = { version = "0.11.21", default-features = false, features = [
   "smtp-transport",
   "rustls",
   "builder",

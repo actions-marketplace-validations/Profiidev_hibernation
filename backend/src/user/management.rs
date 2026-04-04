@@ -3,6 +3,7 @@ use aide::axum::routing::{delete_with, get_with, post_with, put_with};
 use argon2::password_hash::SaltString;
 use axum::{Json, extract::Path};
 use base64::prelude::*;
+use centaurus::mail::Mailer;
 use centaurus::{
   auth::pw::PasswordState,
   bail,
@@ -25,7 +26,7 @@ use crate::{
     group::CacheMapping,
     user::{DetailUserInfo, SimpleGroupInfo, UserInfo},
   },
-  mail::{state::Mailer, templates},
+  mail::templates,
   permissions::{CacheEdit, Permission, UserEdit, UserView},
   ws::state::{UpdateMessage, Updater},
 };

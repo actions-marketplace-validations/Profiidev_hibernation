@@ -1,9 +1,13 @@
 use aide::axum::ApiRouter;
 use axum::Extension;
-use centaurus::{backend::rate_limiter::RateLimiter, db::init::Connection};
+use centaurus::{
+  backend::rate_limiter::RateLimiter,
+  db::{init::Connection, tables::ConnectionExt},
+  mail::{MailSettings, Mailer},
+};
 use tower_governor::GovernorLayer;
 
-use crate::mail::state::{Mailer, ResetPasswordState};
+use crate::mail::state::ResetPasswordState;
 
 mod reset;
 pub mod state;
@@ -18,7 +22,8 @@ pub fn router(rate_limiter: &mut RateLimiter) -> ApiRouter {
 }
 
 pub async fn state(router: ApiRouter, db: &Connection) -> ApiRouter {
-  let mailer = Mailer::new(db).await;
+  let settings: MailSettings = db.settings().get_settings().await.unwrap_or_default();
+  let mailer = Mailer::new(settings).await;
   let password_reset_state = ResetPasswordState::default();
 
   router

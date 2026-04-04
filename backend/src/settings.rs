@@ -1,6 +1,10 @@
 use aide::axum::ApiRouter;
 use aide::axum::routing::{get_with, post_with};
 use axum::Json;
+use centaurus::auth::settings::UserSettings;
+use centaurus::db::settings::Settings;
+use centaurus::db::tables::ConnectionExt;
+use centaurus::mail::{MailSettings, Mailer};
 use centaurus::{
   db::init::Connection,
   error::{ErrorReportStatusExt, Result},
@@ -13,11 +17,6 @@ use url::Url;
 use crate::{
   auth::{jwt_auth::JwtAuth, oidc::OidcState},
   config::Config,
-  db::{
-    DBTrait,
-    settings::{MailSettings, Settings, UserSettings},
-  },
-  mail::state::Mailer,
   permissions::{SettingsEdit, SettingsView},
   ws::state::{UpdateMessage, Updater},
 };

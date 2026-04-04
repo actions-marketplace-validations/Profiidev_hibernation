@@ -5,7 +5,7 @@ ARG RUST_ARCH=${RUST_ARCH/arm64/aarch64}
 ARG TARGET=${RUST_ARCH}-unknown-linux-gnu
 ARG RUSTFLAGS="-C target-feature=+crt-static --cfg reqwest_unstable"
 ARG FRONTEND_DIR=/app/frontend
-ARG FRONTEND_URL="http://localhost:3000"
+ARG FRONTEND_URL="http://localhost:3000/"
 ARG BACKEND_URL="http://localhost:8000"
 
 FROM node:24-alpine AS frontend-builder
