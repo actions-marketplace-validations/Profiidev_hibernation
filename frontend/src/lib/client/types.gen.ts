@@ -4,7 +4,9 @@ export type ClientOptions = {
   baseUrl: 'http://localhost:5173' | (string & {});
 };
 
-export type AccessType = 'Edit' | 'View';
+export const AccessType = { EDIT: 'Edit', VIEW: 'View' } as const;
+
+export type AccessType = (typeof AccessType)[keyof typeof AccessType];
 
 export type AccountUpdate = {
   username: string;
@@ -26,20 +28,20 @@ export type CacheDetails = {
   eviction_policy: EvictionPolicy;
   has_write_access: boolean;
   name: string;
-  nar_count: bigint;
+  nar_count: number;
   priority: number;
   public: boolean;
-  quota: bigint;
+  quota: number;
   sig_key: string;
-  size?: bigint | null;
+  size?: number | null;
   uuid: string;
 };
 
 export type CacheInfo = {
   name: string;
   public: boolean;
-  quota: bigint;
-  size?: bigint | null;
+  quota: number;
+  size?: number | null;
   uuid: string;
 };
 
@@ -60,7 +62,7 @@ export type CodeResponse = {
 export type CreateCacheRequest = {
   name: string;
   public: boolean;
-  quota: bigint;
+  quota: number;
   sig_key: string;
 };
 
@@ -129,7 +131,7 @@ export type EditCacheRequest = {
   name: string;
   priority: number;
   public: boolean;
-  quota: bigint;
+  quota: number;
   sig_key: string;
 };
 
@@ -147,10 +149,14 @@ export type EditTokenRequest = {
   uuid: string;
 };
 
+export const EvictionPolicy = {
+  OLDEST_FIRST: 'OldestFirst',
+  LEAST_RECENTLY_USED: 'LeastRecentlyUsed',
+  LEAST_FREQUENTLY_USED: 'LeastFrequentlyUsed'
+} as const;
+
 export type EvictionPolicy =
-  | 'OldestFirst'
-  | 'LeastRecentlyUsed'
-  | 'LeastFrequentlyUsed';
+  (typeof EvictionPolicy)[keyof typeof EvictionPolicy];
 
 export type GeneralSettings = {
   site_url: string;
@@ -240,24 +246,31 @@ export type ResetUserPassword = {
   uuid: string;
 };
 
-export type SsoType = 'Oidc' | 'None';
+export const SsoType = { OIDC: 'Oidc', NONE: 'None' } as const;
 
-export type SearchOrder = 'Asc' | 'Desc';
+export type SsoType = (typeof SsoType)[keyof typeof SsoType];
+
+export const SearchOrder = { ASC: 'Asc', DESC: 'Desc' } as const;
+
+export type SearchOrder = (typeof SearchOrder)[keyof typeof SearchOrder];
 
 export type SearchResult = {
-  accessed: bigint;
+  accessed: number;
   created_at: Date;
   last_accessed_at?: Date | null;
-  size: bigint;
+  size: number;
   store_path: string;
 };
 
-export type SearchSort =
-  | 'StorePath'
-  | 'Created'
-  | 'Accessed'
-  | 'Size'
-  | 'AccessCount';
+export const SearchSort = {
+  STORE_PATH: 'StorePath',
+  CREATED: 'Created',
+  ACCESSED: 'Accessed',
+  SIZE: 'Size',
+  ACCESS_COUNT: 'AccessCount'
+} as const;
+
+export type SearchSort = (typeof SearchSort)[keyof typeof SearchSort];
 
 export type SearchStorePathsRequest = {
   order: SearchOrder;
@@ -553,14 +566,14 @@ export type OidcCallbackErrors = {
   '5XX': unknown;
 };
 
-export type ConfigData = {
+export type AuthConfigData = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/auth/config';
 };
 
-export type ConfigErrors = {
+export type AuthConfigErrors = {
   /**
    * An error occurred
    */
@@ -571,11 +584,11 @@ export type ConfigErrors = {
   '5XX': unknown;
 };
 
-export type ConfigResponses = {
+export type AuthConfigResponses = {
   200: AuthConfig;
 };
 
-export type ConfigResponse = ConfigResponses[keyof ConfigResponses];
+export type AuthConfigResponse = AuthConfigResponses[keyof AuthConfigResponses];
 
 export type UpdateAvatarData = {
   body: AvatarUpdate;
@@ -1041,14 +1054,14 @@ export type ResetUserPasswordResponses = {
   200: unknown;
 };
 
-export type GeneralSettingsData = {
+export type GetGeneralSettingsData = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/settings/general';
 };
 
-export type GeneralSettingsErrors = {
+export type GetGeneralSettingsErrors = {
   /**
    * An error occurred
    */
@@ -1059,21 +1072,21 @@ export type GeneralSettingsErrors = {
   '5XX': unknown;
 };
 
-export type GeneralSettingsResponses = {
+export type GetGeneralSettingsResponses = {
   200: GeneralSettings;
 };
 
-export type GeneralSettingsResponse =
-  GeneralSettingsResponses[keyof GeneralSettingsResponses];
+export type GetGeneralSettingsResponse =
+  GetGeneralSettingsResponses[keyof GetGeneralSettingsResponses];
 
-export type GetSettingsData = {
+export type GetUserSettingsData = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/settings/user';
 };
 
-export type GetSettingsErrors = {
+export type GetUserSettingsErrors = {
   /**
    * An error occurred
    */
@@ -1084,12 +1097,12 @@ export type GetSettingsErrors = {
   '5XX': unknown;
 };
 
-export type GetSettingsResponses = {
+export type GetUserSettingsResponses = {
   200: UserSettings;
 };
 
-export type GetSettingsResponse =
-  GetSettingsResponses[keyof GetSettingsResponses];
+export type GetUserSettingsResponse =
+  GetUserSettingsResponses[keyof GetUserSettingsResponses];
 
 export type SaveUserSettingsData = {
   body: UserSettings;
@@ -1131,14 +1144,14 @@ export type SaveUserSettingsResponses = {
   200: unknown;
 };
 
-export type GetSettings2Data = {
+export type GetMailSettingsData = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/settings/mail';
 };
 
-export type GetSettings2Errors = {
+export type GetMailSettingsErrors = {
   /**
    * An error occurred
    */
@@ -1149,12 +1162,12 @@ export type GetSettings2Errors = {
   '5XX': unknown;
 };
 
-export type GetSettings2Responses = {
+export type GetMailSettingsResponses = {
   200: MailSettings;
 };
 
-export type GetSettings2Response =
-  GetSettings2Responses[keyof GetSettings2Responses];
+export type GetMailSettingsResponse =
+  GetMailSettingsResponses[keyof GetMailSettingsResponses];
 
 export type SaveMailSettingsData = {
   body: MailSettings;

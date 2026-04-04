@@ -12,7 +12,7 @@ use crate::{
 };
 
 pub fn router() -> ApiRouter {
-  ApiRouter::new().api_route("/", get_with(config, |op| op.id("config")))
+  ApiRouter::new().api_route("/", get_with(config, |op| op.id("authConfig")))
 }
 
 #[derive(Serialize, Debug, JsonSchema)]

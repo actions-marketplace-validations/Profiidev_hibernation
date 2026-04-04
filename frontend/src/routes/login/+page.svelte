@@ -11,8 +11,8 @@
   import { goto, invalidate } from '$app/navigation';
   import { connectWebsocket } from '$lib/backend/updater.svelte';
   import { toast } from 'positron-components/components/util/general';
-  import { SSOType } from '$lib/backend/sso.svelte';
   import FormInputPassword from '$lib/components/form/FormInputPassword.svelte';
+  import { SsoType } from '$lib/client';
 
   let { data } = $props();
 
@@ -106,7 +106,7 @@
           {@render defaultBtn({ content: 'Login' })}
         {/snippet}
       </BaseForm>
-      {#if data.config?.sso_type !== SSOType.None}
+      {#if data.config?.sso_type !== SsoType.NONE}
         <FieldSeparator
           class="*:data-[slot=field-separator-content]:bg-card my-4"
           >Or continue with</FieldSeparator

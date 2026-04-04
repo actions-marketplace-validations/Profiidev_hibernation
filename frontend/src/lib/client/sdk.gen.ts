@@ -3,6 +3,9 @@
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
 import type {
+  AuthConfigData,
+  AuthConfigErrors,
+  AuthConfigResponses,
   AuthenticateData,
   AuthenticateErrors,
   CacheDetailsData,
@@ -13,9 +16,6 @@ import type {
   ClearCacheResponses,
   CompleteSetupData,
   CompleteSetupErrors,
-  ConfigData,
-  ConfigErrors,
-  ConfigResponses,
   CreateCacheData,
   CreateCacheErrors,
   CreateCacheResponses,
@@ -55,18 +55,18 @@ import type {
   EditUserData,
   EditUserErrors,
   EditUserResponses,
-  GeneralSettingsData,
-  GeneralSettingsErrors,
-  GeneralSettingsResponses,
-  GetSettings2Data,
-  GetSettings2Errors,
-  GetSettings2Responses,
-  GetSettingsData,
-  GetSettingsErrors,
-  GetSettingsResponses,
+  GetGeneralSettingsData,
+  GetGeneralSettingsErrors,
+  GetGeneralSettingsResponses,
+  GetMailSettingsData,
+  GetMailSettingsErrors,
+  GetMailSettingsResponses,
   GetTokenData,
   GetTokenErrors,
   GetTokenResponses,
+  GetUserSettingsData,
+  GetUserSettingsErrors,
+  GetUserSettingsResponses,
   GroupInfoData,
   GroupInfoErrors,
   GroupInfoResponses,
@@ -264,13 +264,14 @@ export const oidcCallback = <ThrowOnError extends boolean = false>(
     ...options
   });
 
-export const config = <ThrowOnError extends boolean = false>(
-  options?: Options<ConfigData, ThrowOnError>
+export const authConfig = <ThrowOnError extends boolean = false>(
+  options?: Options<AuthConfigData, ThrowOnError>
 ) =>
-  (options?.client ?? client).get<ConfigResponses, ConfigErrors, ThrowOnError>({
-    url: '/api/auth/config',
-    ...options
-  });
+  (options?.client ?? client).get<
+    AuthConfigResponses,
+    AuthConfigErrors,
+    ThrowOnError
+  >({ url: '/api/auth/config', ...options });
 
 export const updateAvatar = <ThrowOnError extends boolean = false>(
   options: Options<UpdateAvatarData, ThrowOnError>
@@ -453,21 +454,21 @@ export const resetUserPassword = <ThrowOnError extends boolean = false>(
     }
   });
 
-export const generalSettings = <ThrowOnError extends boolean = false>(
-  options?: Options<GeneralSettingsData, ThrowOnError>
+export const getGeneralSettings = <ThrowOnError extends boolean = false>(
+  options?: Options<GetGeneralSettingsData, ThrowOnError>
 ) =>
   (options?.client ?? client).get<
-    GeneralSettingsResponses,
-    GeneralSettingsErrors,
+    GetGeneralSettingsResponses,
+    GetGeneralSettingsErrors,
     ThrowOnError
   >({ url: '/api/settings/general', ...options });
 
-export const getSettings = <ThrowOnError extends boolean = false>(
-  options?: Options<GetSettingsData, ThrowOnError>
+export const getUserSettings = <ThrowOnError extends boolean = false>(
+  options?: Options<GetUserSettingsData, ThrowOnError>
 ) =>
   (options?.client ?? client).get<
-    GetSettingsResponses,
-    GetSettingsErrors,
+    GetUserSettingsResponses,
+    GetUserSettingsErrors,
     ThrowOnError
   >({ url: '/api/settings/user', ...options });
 
@@ -487,12 +488,12 @@ export const saveUserSettings = <ThrowOnError extends boolean = false>(
     }
   });
 
-export const getSettings2 = <ThrowOnError extends boolean = false>(
-  options?: Options<GetSettings2Data, ThrowOnError>
+export const getMailSettings = <ThrowOnError extends boolean = false>(
+  options?: Options<GetMailSettingsData, ThrowOnError>
 ) =>
   (options?.client ?? client).get<
-    GetSettings2Responses,
-    GetSettings2Errors,
+    GetMailSettingsResponses,
+    GetMailSettingsErrors,
     ThrowOnError
   >({ url: '/api/settings/mail', ...options });
 

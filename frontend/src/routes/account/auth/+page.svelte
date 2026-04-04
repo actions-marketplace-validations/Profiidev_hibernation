@@ -10,8 +10,6 @@
   import { RequestError } from 'positron-components/backend';
   import FormInputPassword from '$lib/components/form/FormInputPassword.svelte';
 
-  let { data } = $props();
-
   const onsubmit = async (form: FormValue<typeof authSettings>) => {
     let ret = await updatePassword(form);
 

@@ -7,16 +7,17 @@ export default defineConfig({
     postProcess: ['prettier']
   },
   plugins: [
-    '@hey-api/typescript',
     {
-      name: '@hey-api/sdk',
-      operations: {
-        methodName: (name) => {
-          return name.replace(/^([a-z]+)Api/i, '$1');
-        }
-      }
+      name: '@hey-api/typescript',
+      enums: true
     },
-    '@hey-api/transformers',
+    {
+      name: '@hey-api/sdk'
+    },
+    {
+      name: '@hey-api/transformers',
+      bigInt: false
+    },
     '@hey-api/client-fetch'
   ],
   logs: './build'

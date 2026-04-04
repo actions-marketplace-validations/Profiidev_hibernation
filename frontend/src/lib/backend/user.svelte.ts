@@ -1,52 +1,10 @@
-import type { Permission } from '$lib/permissions.svelte';
 import {
-  delete_,
-  get,
   post,
   put,
   RequestError,
   ResponseType
 } from 'positron-components/backend';
 import { fetchKey, getEncrypt } from './auth.svelte';
-import type { CacheMapping, SimpleCacheInfo } from './groups.svelte';
-
-export interface UserInfo {
-  uuid: string;
-  name: string;
-  email: string;
-  permissions: Permission[];
-  avatar?: string;
-  caches: CacheMapping[];
-}
-
-export const getUserInfo = async (
-  fetch: typeof window.fetch = window.fetch
-) => {
-  return await get<UserInfo>('/api/user/info', {
-    res_type: ResponseType.Json,
-    fetch
-  });
-};
-
-export interface AccountUpdate {
-  username: string;
-}
-
-export const updateAccount = async (data: AccountUpdate) => {
-  return await post('/api/user/account/update', {
-    body: data
-  });
-};
-
-export interface AvatarUpdate {
-  avatar: string;
-}
-
-export const updateAvatar = async (data: AvatarUpdate) => {
-  return await post('/api/user/account/avatar', {
-    body: data
-  });
-};
 
 export interface UpdatePassword {
   old_password: string;
@@ -75,68 +33,6 @@ export const updatePassword = async (payload: UpdatePassword) => {
   return res;
 };
 
-export interface UserListInfo {
-  uuid: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  groups: SimpleGroupInfo[];
-}
-
-export interface SimpleGroupInfo {
-  uuid: string;
-  name: string;
-}
-
-export const listUsers = async (fetch: typeof window.fetch = window.fetch) => {
-  let ret = await get<UserListInfo[]>('/api/user/management', {
-    res_type: ResponseType.Json,
-    fetch
-  });
-
-  if (ret && Array.isArray(ret)) {
-    return ret;
-  }
-};
-
-export type DetailUserInfo = UserListInfo & {
-  permissions: Permission[];
-  caches: CacheMapping[];
-};
-
-export const getListUserInfo = async (
-  uuid: string,
-  fetch: typeof window.fetch = window.fetch
-) => {
-  let ret = await get<DetailUserInfo>(`/api/user/management/${uuid}`, {
-    res_type: ResponseType.Json,
-    fetch
-  });
-
-  if (ret && typeof ret === 'object') {
-    return ret;
-  }
-};
-
-export const getMailStatus = async (
-  fetch: typeof window.fetch = window.fetch
-) => {
-  let ret = await get<{ active: boolean }>('/api/user/management/mail', {
-    res_type: ResponseType.Json,
-    fetch
-  });
-
-  if (ret && typeof ret === 'object') {
-    return ret;
-  }
-};
-
-export const deleteUser = async (uuid: string) => {
-  return await delete_(`/api/user/management`, {
-    body: { uuid }
-  });
-};
-
 export interface CreateUserRequest {
   name: string;
   email: string;
@@ -162,51 +58,6 @@ export const createUser = async (data: CreateUserRequest) => {
   }
 
   return res;
-};
-
-export const simpleGroupList = async (
-  fetch: typeof window.fetch = window.fetch
-) => {
-  let ret = await get<SimpleGroupInfo[]>('/api/user/management/groups', {
-    res_type: ResponseType.Json,
-    fetch
-  });
-
-  if (ret && Array.isArray(ret)) {
-    return ret;
-  }
-};
-
-export const simpleCacheList = async (
-  fetch: typeof window.fetch = window.fetch
-) => {
-  let ret = await get<SimpleCacheInfo[]>('/api/user/management/caches', {
-    res_type: ResponseType.Json,
-    fetch
-  });
-
-  if (ret && Array.isArray(ret)) {
-    return ret;
-  }
-};
-
-export interface UserEditRequest {
-  uuid: string;
-  name: string;
-  groups: string[];
-  caches: CacheMapping[];
-}
-
-export const editUser = async (data: UserEditRequest) => {
-  return await put(`/api/user/management`, {
-    body: data
-  });
-};
-
-export const resetUserAvatar = async (uuid: string) => {
-  return await delete_(`/api/user/management/avatar`, {
-    body: { uuid }
-  });
 };
 
 export interface ResetUserPasswordRequest {

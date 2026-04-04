@@ -1,15 +1,5 @@
-import { post, RequestError } from 'positron-components/backend';
+import { get, post, RequestError } from 'positron-components/backend';
 import { fetchKey, getEncrypt } from './auth.svelte';
-
-export interface ForgotPassword {
-  email: string;
-}
-
-export const sendResetLink = async (data: ForgotPassword) => {
-  return await post(`/api/mail/reset/send`, {
-    body: data
-  });
-};
 
 export interface ResetPassword {
   token: string;
@@ -35,6 +25,10 @@ export const sendResetPassword = async (data: ResetPassword) => {
   return res;
 };
 
-export const sendTestEmail = async () => {
-  return await post(`/api/mail/test`);
+export const size_to_gib = (size: number) => {
+  return size / 1024 / 1024 / 1024;
+};
+
+export const sendCliCode = async (code: string, user: string) => {
+  return await get('http://localhost:16401?code=' + code);
 };

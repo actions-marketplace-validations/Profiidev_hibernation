@@ -1,9 +1,4 @@
-import {
-  get,
-  post,
-  RequestError,
-  ResponseType
-} from 'positron-components/backend';
+import { post, RequestError, ResponseType } from 'positron-components/backend';
 import { fetchKey, getEncrypt } from './auth.svelte';
 
 export interface SetupPayload {
@@ -11,25 +6,6 @@ export interface SetupPayload {
   admin_password: string;
   admin_email: string;
 }
-
-export interface SetupStatus {
-  is_setup: boolean;
-  db_backend: 'PostgreSQL' | 'MySQL' | 'SQLite';
-  storage_backend: 'Local' | 'S3';
-}
-
-export const getSetupStatus = async (
-  fetch: typeof window.fetch = window.fetch
-) => {
-  let ret = await get<SetupStatus>('/api/setup', {
-    res_type: ResponseType.Json,
-    fetch
-  });
-
-  if (typeof ret === 'object') {
-    return ret;
-  }
-};
 
 export interface SetupResponse {
   user: string;

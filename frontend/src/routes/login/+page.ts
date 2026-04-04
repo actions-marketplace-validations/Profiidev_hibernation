@@ -1,6 +1,6 @@
-import { getOidcUrl, getAuthConfig, SSOType } from '$lib/backend/sso.svelte';
 import { redirect } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
+import { authConfig, oidcUrl, SsoType } from '$lib/client';
 
 export const load: PageLoad = async ({ fetch, url }) => {
   let error = url.searchParams.get('error') || null;
@@ -9,9 +9,11 @@ export const load: PageLoad = async ({ fetch, url }) => {
   }
   let skip = url.searchParams.get('skip') === 'true';
 
-  let config = await getAuthConfig(fetch);
-  if (config?.sso_type !== SSOType.None) {
-    let url = await getOidcUrl();
+  let { data: config } = await authConfig({ fetch });
+  if (config?.sso_type !== SsoType.NONE) {
+    let url = (
+      (await oidcUrl({ fetch })) as { data: { url: string } } | undefined
+    )?.data.url;
     if (url && config?.instant_redirect && !skip) {
       redirect(302, url);
     }

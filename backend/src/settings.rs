@@ -26,11 +26,11 @@ pub fn router() -> ApiRouter {
   ApiRouter::new()
     .api_route(
       "/general",
-      get_with(general_settings, |op| op.id("generalSettings")),
+      get_with(general_settings, |op| op.id("getGeneralSettings")),
     )
     .api_route(
       "/user",
-      get_with(get_settings::<UserSettings>, |op| op.id("getSettings")),
+      get_with(get_settings::<UserSettings>, |op| op.id("getUserSettings")),
     )
     .api_route(
       "/user",
@@ -38,7 +38,7 @@ pub fn router() -> ApiRouter {
     )
     .api_route(
       "/mail",
-      get_with(get_settings::<MailSettings>, |op| op.id("getSettings")),
+      get_with(get_settings::<MailSettings>, |op| op.id("getMailSettings")),
     )
     .api_route(
       "/mail",
