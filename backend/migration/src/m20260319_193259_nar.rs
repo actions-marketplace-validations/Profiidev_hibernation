@@ -27,6 +27,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(NAR_HASH_INDEX_NAME)
           .table(Nar::Table)
           .col(Nar::Hash)
@@ -37,6 +38,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(NAR_SIZE_INDEX_NAME)
           .table(Nar::Table)
           .col(Nar::Size)

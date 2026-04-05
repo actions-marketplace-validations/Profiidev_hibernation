@@ -80,6 +80,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(CACHE_ACCESS_CACHE_ID_INDEX_NAME)
           .table(CacheAccess::Table)
           .col(CacheAccess::CacheId)
@@ -90,6 +91,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(CACHE_ACCESS_USER_ID_INDEX_NAME)
           .table(CacheAccess::Table)
           .col(CacheAccess::UserId)
@@ -100,6 +102,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(CACHE_ACCESS_GROUP_ID_INDEX_NAME)
           .table(CacheAccess::Table)
           .col(CacheAccess::GroupId)

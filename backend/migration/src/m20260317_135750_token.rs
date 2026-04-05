@@ -34,6 +34,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(TOKEN_USER_ID_INDEX_NAME)
           .table(Token::Table)
           .col(Token::UserId)

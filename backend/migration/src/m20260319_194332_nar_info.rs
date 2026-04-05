@@ -70,6 +70,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(NAR_INFO_CACHE_ID_INDEX_NAME)
           .table(NarInfo::Table)
           .col(NarInfo::CacheId)
@@ -80,6 +81,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(NAR_INFO_NAR_ID_INDEX_NAME)
           .table(NarInfo::Table)
           .col(NarInfo::NarId)
@@ -90,6 +92,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(NAR_INFO_STORE_PATH_INDEX_NAME)
           .table(NarInfo::Table)
           .col(NarInfo::StorePath)
@@ -100,6 +103,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(NAR_INFO_STORE_PATH_HASH_INDEX_NAME)
           .table(NarInfo::Table)
           .col(NarInfo::StorePathHash)
@@ -110,6 +114,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(NAR_INFO_REFERENCE_NAR_INFO_ID_INDEX_NAME)
           .table(NarInfoReference::Table)
           .col(NarInfoReference::NarInfoId)
