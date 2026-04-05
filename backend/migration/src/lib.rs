@@ -1,6 +1,5 @@
 pub use sea_orm_migration::prelude::*;
 
-mod m20260129_154755_user_avatar;
 mod m20260317_135750_token;
 mod m20260319_192505_cache;
 mod m20260319_193259_nar;
@@ -19,7 +18,6 @@ impl MigratorTrait for Migrator {
       Box::new(centaurus::db::migrations::user::Migration),
       Box::new(centaurus::db::migrations::groups::Migration),
       Box::new(centaurus::db::migrations::setup::Migration),
-      Box::new(m20260129_154755_user_avatar::Migration),
       Box::new(m20260317_135750_token::Migration),
       Box::new(m20260319_192505_cache::Migration),
       Box::new(m20260319_193259_nar::Migration),

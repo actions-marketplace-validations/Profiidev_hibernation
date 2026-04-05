@@ -1,7 +1,7 @@
 use std::{io::IsTerminal, path::PathBuf};
 
 use bytes::Bytes;
-use centaurus::{backend::version::HEADER_NAME, error::Result, eyre::Context};
+use centaurus::{backend::middleware::version::HEADER_NAME, error::Result, eyre::Context};
 use reqwest::{Body, Client, Method, RequestBuilder, Response};
 use serde::Deserialize;
 use shared::api::push::{

@@ -1,70 +1,26 @@
 use aide::axum::ApiRouter;
-use aide::axum::routing::{delete_with, get_with, post_with, put_with};
-use argon2::password_hash::SaltString;
+use aide::axum::routing::{get_with, put_with};
 use axum::{Json, extract::Path};
-use base64::prelude::*;
 use centaurus::backend::auth::jwt_auth::JwtAuth;
 use centaurus::backend::auth::permission::{Permission, UserEdit, UserView};
-use centaurus::backend::auth::pw_state::PasswordState;
 use centaurus::db::tables::ConnectionExt;
-use centaurus::db::tables::user::SimpleGroupInfo;
-use centaurus::mail::Mailer;
-use centaurus::{
-  bail,
-  db::init::Connection,
-  error::{ErrorReportStatusExt, Result},
-};
-use http::StatusCode;
-use rand::RngExt;
-use rsa::rand_core::OsRng;
+use centaurus::{bail, db::init::Connection, error::Result};
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::user::template;
+use crate::db::{DBTrait, cache::SimpleCacheInfo, group_ext::CacheMapping, user_ext::DetailUserInfo};
 use crate::utils::CacheEdit;
 use crate::utils::{UpdateMessage, Updater};
-use crate::{
-  config::Config,
-  db::{
-    DBTrait,
-    cache::SimpleCacheInfo,
-    group::CacheMapping,
-    user::{DetailUserInfo, UserInfo},
-  },
-};
-
-const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)(*&^%$#@!~";
 
 pub fn router() -> ApiRouter {
   ApiRouter::new()
-    .api_route("/", get_with(list_users, |op| op.id("listUsers")))
-    .api_route("/", post_with(create_user, |op| op.id("createUser")))
-    .api_route("/", delete_with(delete_user, |op| op.id("deleteUser")))
     .api_route("/", put_with(edit_user, |op| op.id("editUser")))
     .api_route("/{uuid}", get_with(user_info, |op| op.id("userInfo")))
-    .api_route("/mail", get_with(mail_active, |op| op.id("mailActive")))
-    .api_route(
-      "/groups",
-      get_with(list_groups_simple, |op| op.id("listGroupsSimple")),
-    )
     .api_route(
       "/caches",
       get_with(list_caches_simple, |op| op.id("listCachesSimple")),
     )
-    .api_route(
-      "/avatar",
-      delete_with(reset_user_avatar, |op| op.id("resetUserAvatar")),
-    )
-    .api_route(
-      "/password",
-      put_with(reset_user_password, |op| op.id("resetUserPassword")),
-    )
-}
-
-async fn list_users(_auth: JwtAuth<UserView>, db: Connection) -> Result<Json<Vec<UserInfo>>> {
-  let users = db.user_ext().list_users().await?;
-  Ok(Json(users))
 }
 
 #[derive(Deserialize, JsonSchema)]
@@ -82,137 +38,6 @@ async fn user_info(
     bail!(NOT_FOUND, "User not found");
   };
   Ok(Json(info))
-}
-
-#[derive(Serialize, JsonSchema)]
-struct MailActiveResponse {
-  active: bool,
-}
-
-async fn mail_active(_auth: JwtAuth<UserView>, mailer: Mailer) -> Result<Json<MailActiveResponse>> {
-  let active = mailer.is_active().await;
-  Ok(Json(MailActiveResponse { active }))
-}
-
-#[derive(Deserialize, JsonSchema)]
-struct CreateUser {
-  name: String,
-  email: String,
-  password: Option<String>,
-}
-
-#[derive(Serialize, JsonSchema)]
-struct CreateUserResponse {
-  uuid: Uuid,
-}
-
-async fn create_user(
-  _auth: JwtAuth<UserEdit>,
-  db: Connection,
-  updater: Updater,
-  mailer: Mailer,
-  state: PasswordState,
-  config: Config,
-  Json(req): Json<CreateUser>,
-) -> Result<Json<CreateUserResponse>> {
-  if req.name.trim().is_empty() {
-    bail!(BAD_REQUEST, "Name cannot be empty");
-  }
-
-  if req.email.trim().is_empty() {
-    bail!(BAD_REQUEST, "Email cannot be empty");
-  }
-
-  if db.user().try_get_user_by_email(&req.email).await?.is_some() {
-    bail!(CONFLICT, "User with this email already exists");
-  }
-
-  let password = if mailer.is_active().await {
-    let mut rng = rand::rng();
-    (0..12)
-      .map(|_| {
-        let idx = rng.random_range(0..CHARSET.len());
-        CHARSET[idx] as char
-      })
-      .collect::<String>()
-  } else if let Some(pw) = req.password {
-    let bytes = BASE64_STANDARD.decode(pw).status(StatusCode::BAD_REQUEST)?;
-    let pw_bytes = state.decrypt(&bytes).status(StatusCode::BAD_REQUEST)?;
-    String::from_utf8_lossy(&pw_bytes).to_string()
-  } else {
-    bail!(
-      BAD_REQUEST,
-      "Password must be provided when mail service is not active"
-    );
-  };
-
-  let salt = SaltString::generate(OsRng {}).to_string();
-  let password_hash = state.pw_hash_raw(&salt, &password)?;
-
-  let user_id = db
-    .user()
-    .create_user(req.name.clone(), req.email.clone(), password_hash, salt)
-    .await?;
-  if mailer.is_active().await {
-    let subject = "Your new account";
-    mailer
-      .send_mail(
-        req.name,
-        req.email,
-        subject.to_string(),
-        template::init_password(config.site.site_url.as_str(), &password),
-      )
-      .await?;
-  }
-  updater
-    .broadcast(UpdateMessage::User { uuid: user_id })
-    .await;
-
-  Ok(Json(CreateUserResponse { uuid: user_id }))
-}
-
-#[derive(Deserialize, JsonSchema)]
-struct DeleteUserRequest {
-  uuid: Uuid,
-}
-
-async fn delete_user(
-  auth: JwtAuth<UserEdit>,
-  db: Connection,
-  updater: Updater,
-  Json(data): Json<DeleteUserRequest>,
-) -> Result<()> {
-  let Some(admin_group) = db.setup().get_admin_group_id().await? else {
-    bail!(INTERNAL_SERVER_ERROR, "Admin group is not set up");
-  };
-
-  if db.group().is_last_admin(admin_group, data.uuid).await? {
-    bail!(CONFLICT, "Cannot delete the last user from the admin group");
-  }
-
-  if db.group().is_in_group(admin_group, data.uuid).await?
-    && !db.group().is_in_group(admin_group, auth.user_id).await?
-  {
-    bail!(
-      FORBIDDEN,
-      "User cannot delete another user with higher permissions"
-    );
-  }
-
-  db.user().delete_user(data.uuid).await?;
-  updater
-    .broadcast(UpdateMessage::User { uuid: data.uuid })
-    .await;
-
-  Ok(())
-}
-
-async fn list_groups_simple(
-  _auth: JwtAuth<UserView>,
-  db: Connection,
-) -> Result<Json<Vec<SimpleGroupInfo>>> {
-  let groups = db.group().list_groups_simple().await?;
-  Ok(Json(groups))
 }
 
 async fn list_caches_simple(
@@ -288,65 +113,6 @@ async fn edit_user(
   updater
     .broadcast(UpdateMessage::User { uuid: req.uuid })
     .await;
-
-  Ok(())
-}
-
-#[derive(Deserialize, JsonSchema)]
-struct UserAvatarResetRequest {
-  uuid: Uuid,
-}
-
-async fn reset_user_avatar(
-  _auth: JwtAuth<UserEdit>,
-  db: Connection,
-  updater: Updater,
-  Json(req): Json<UserAvatarResetRequest>,
-) -> Result<()> {
-  db.user_ext().reset_avatar(req.uuid).await?;
-  updater
-    .broadcast(UpdateMessage::User { uuid: req.uuid })
-    .await;
-
-  Ok(())
-}
-
-#[derive(Deserialize, JsonSchema)]
-struct ResetUserPassword {
-  uuid: Uuid,
-  new_password: String,
-}
-
-async fn reset_user_password(
-  auth: JwtAuth<UserEdit>,
-  db: Connection,
-  state: PasswordState,
-  mailer: Mailer,
-  Json(req): Json<ResetUserPassword>,
-) -> Result<()> {
-  if mailer.is_active().await {
-    bail!(
-      BAD_REQUEST,
-      "Cannot reset password when mail service is active"
-    );
-  }
-
-  let self_permissions = db.group().get_user_permissions(auth.user_id).await?;
-  let target_permissions = db.group().get_user_permissions(req.uuid).await?;
-
-  if target_permissions
-    .iter()
-    .any(|p| !self_permissions.contains(p))
-  {
-    bail!(
-      FORBIDDEN,
-      "Cannot reset password for a user with higher permissions"
-    );
-  }
-
-  let user = db.user().get_user_by_id(req.uuid).await?;
-  let hash = state.pw_hash(&user.salt, &req.new_password)?;
-  db.user().update_user_password(req.uuid, hash).await?;
 
   Ok(())
 }

@@ -1,14 +1,12 @@
 use aide::axum::ApiRouter;
-use centaurus::backend::middleware::rate_limiter::RateLimiter;
+use centaurus::backend::{middleware::rate_limiter::RateLimiter, user};
 
-mod account;
-mod info;
+use crate::utils::UpdateMessage;
+
 mod management;
-mod template;
 
 pub fn router(rate_limiter: &mut RateLimiter) -> ApiRouter {
   ApiRouter::new()
-    .nest("/account", account::router(rate_limiter))
-    .nest("/info", info::router())
     .nest("/management", management::router())
+    .merge(user::router::<UpdateMessage>(rate_limiter))
 }

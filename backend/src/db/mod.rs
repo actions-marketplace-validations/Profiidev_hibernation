@@ -1,16 +1,16 @@
 use centaurus::db::init::Connection;
 
 use crate::db::cache::CacheTable;
-use crate::db::group::GroupTableExt;
+use crate::db::group_ext::GroupTableExt;
 use crate::db::nar::NarTable;
 use crate::db::token::TokenTable;
-use crate::db::user::UserTableExt;
+use crate::db::user_ext::UserTableExt;
 
 pub mod cache;
-pub mod group;
+pub mod group_ext;
 pub mod nar;
 pub mod token;
-pub mod user;
+pub mod user_ext;
 
 pub trait DBTrait {
   fn group_ext(&self) -> GroupTableExt<'_>;

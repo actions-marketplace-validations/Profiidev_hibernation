@@ -14,6 +14,18 @@ impl websocket::state::UpdateMessage for UpdateMessage {
   fn settings() -> Self {
     Self::Settings
   }
+
+  fn user(uuid: Uuid) -> Self {
+    Self::User { uuid }
+  }
+
+  fn group(uuid: Uuid) -> Self {
+    Self::Group { uuid }
+  }
+
+  fn user_permissions() -> Self {
+    Self::UserPermissions
+  }
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
