@@ -22,50 +22,6 @@ pub fn router() -> ApiRouter {
     .api_route("/", get_with(is_setup, |op| op.id("isSetup")))
 }
 
-pub async fn create_admin_group(db: &Connection) -> Result<()> {
-  match db.setup().get_admin_group_id().await? {
-    Some(id) => {
-      info!("Admin group already created with ID {}", id);
-      info!("Adding missing permissions to admin group");
-
-      let existing_perms = db.group().get_group_permissions(id).await?;
-      let all_perms = crate::utils::permissions();
-      let missing_perms: Vec<String> = all_perms
-        .into_iter()
-        .filter(|p| !existing_perms.contains(&p.to_string()))
-        .map(|p| p.to_string())
-        .collect();
-
-      if !missing_perms.is_empty() {
-        db.group()
-          .add_permissions_to_group(id, missing_perms)
-          .await?;
-        info!("Added missing permissions to admin group");
-      } else {
-        info!("No missing permissions for admin group");
-      }
-    }
-    None => {
-      info!("Admin group not found, creating it with all permissions");
-
-      let all_perms: Vec<String> = crate::utils::permissions()
-        .into_iter()
-        .map(|p| p.to_string())
-        .collect();
-
-      let admin_group_id = db.group().create_group("Admin".to_string()).await?;
-      db.group()
-        .add_permissions_to_group(admin_group_id, all_perms)
-        .await?;
-
-      db.setup().set_admin_group_created(admin_group_id).await?;
-      info!("Created admin group with ID {}", admin_group_id);
-    }
-  }
-
-  Ok(())
-}
-
 #[derive(Deserialize, JsonSchema)]
 struct SetupPayload {
   admin_username: String,
