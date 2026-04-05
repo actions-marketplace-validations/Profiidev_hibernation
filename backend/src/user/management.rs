@@ -21,9 +21,9 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::user::template;
 use crate::utils::CacheEdit;
 use crate::utils::{UpdateMessage, Updater};
-use crate::user::template;
 use crate::{
   config::Config,
   db::{
@@ -160,7 +160,7 @@ async fn create_user(
         req.name,
         req.email,
         subject.to_string(),
-        template::init_password(config.site_url.as_str(), &password),
+        template::init_password(config.site.site_url.as_str(), &password),
       )
       .await?;
   }

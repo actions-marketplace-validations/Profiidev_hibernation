@@ -29,8 +29,8 @@ mod nix;
 mod settings;
 mod setup;
 mod token;
-mod utils;
 mod user;
+mod utils;
 
 #[tokio::main]
 async fn main() {
@@ -45,7 +45,11 @@ async fn main() {
   version_header!(app);
 
   if config.virtual_host_routing {
-    let host_router = HostRouter::new(app, config.site_url, "/api/nix/{subdomain}{path}".into());
+    let host_router = HostRouter::new(
+      app,
+      config.site.site_url,
+      "/api/nix/{subdomain}{path}".into(),
+    );
     run_app_connect_info(listener, host_router).await;
   } else {
     info!("Starting application");

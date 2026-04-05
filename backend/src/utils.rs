@@ -10,7 +10,11 @@ use uuid::Uuid;
 
 pub type Updater = websocket::state::Updater<UpdateMessage>;
 
-impl websocket::state::UpdateMessage for UpdateMessage {}
+impl websocket::state::UpdateMessage for UpdateMessage {
+  fn settings() -> Self {
+    Self::Settings
+  }
+}
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 #[serde(tag = "type")]
