@@ -1,8 +1,11 @@
 use aide::axum::ApiRouter;
 use aide::axum::routing::{get_with, put_with};
 use axum::{Json, extract::Path};
+use centaurus::backend::auth::jwt_auth::JwtAuth;
 use centaurus::backend::auth::permission::{GroupEdit, GroupView, Permission};
-use centaurus::backend::{auth::jwt_auth::JwtAuth, group};
+use centaurus::backend::group::{
+  create_group_route, delete_group_route, list_groups_route, list_users_simple_route,
+};
 use centaurus::db::tables::ConnectionExt;
 use centaurus::{bail, db::init::Connection, error::Result};
 use schemars::JsonSchema;
@@ -21,13 +24,16 @@ use crate::{
 
 pub fn router() -> ApiRouter {
   ApiRouter::new()
+    .api_route("/", list_groups_route())
+    .api_route("/", create_group_route::<UpdateMessage>())
+    .api_route("/", delete_group_route::<UpdateMessage>())
     .api_route("/", put_with(edit_group, |op| op.id("editGroup")))
     .api_route("/{uuid}", get_with(group_info, |op| op.id("groupInfo")))
+    .api_route("/users", list_users_simple_route())
     .api_route(
       "/caches",
       get_with(list_caches_simple, |op| op.id("listCachesSimple")),
     )
-    .merge(group::router::<UpdateMessage>())
 }
 
 #[derive(Deserialize, JsonSchema)]

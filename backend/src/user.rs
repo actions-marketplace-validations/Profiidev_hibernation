@@ -1,20 +1,52 @@
-use aide::axum::ApiRouter;
-use aide::axum::routing::{get_with, put_with};
+use aide::axum::{
+  ApiRouter,
+  routing::{get_with, put_with},
+};
 use axum::{Json, extract::Path};
-use centaurus::backend::auth::jwt_auth::JwtAuth;
-use centaurus::backend::auth::permission::{Permission, UserEdit, UserView};
-use centaurus::db::tables::ConnectionExt;
-use centaurus::{bail, db::init::Connection, error::Result};
+use centaurus::{
+  backend::{
+    auth::{
+      jwt_auth::JwtAuth,
+      permission::{Permission, UserEdit, UserView},
+    },
+    middleware::rate_limiter::RateLimiter,
+    user::{
+      account, info,
+      management::{
+        create_user_route, delete_user_route, list_groups_simple_route, list_users_route,
+        mail_active_route, reset_user_avatar_route, reset_user_password_route,
+      },
+    },
+  },
+  bail,
+  db::{init::Connection, tables::ConnectionExt},
+  error::Result,
+};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::db::{DBTrait, cache::SimpleCacheInfo, group_ext::CacheMapping, user_ext::DetailUserInfo};
-use crate::utils::CacheEdit;
-use crate::utils::{UpdateMessage, Updater};
+use crate::{
+  db::{DBTrait, cache::SimpleCacheInfo, group_ext::CacheMapping, user_ext::DetailUserInfo},
+  utils::{CacheEdit, UpdateMessage, Updater},
+};
 
-pub fn router() -> ApiRouter {
+pub fn router(rate_limiter: &mut RateLimiter) -> ApiRouter {
   ApiRouter::new()
+    .nest("/management", management())
+    .nest("/account", account::router::<UpdateMessage>(rate_limiter))
+    .nest("/info", info::router())
+}
+
+fn management() -> ApiRouter {
+  ApiRouter::new()
+    .api_route("/", list_users_route())
+    .api_route("/", create_user_route::<UpdateMessage>())
+    .api_route("/", delete_user_route::<UpdateMessage>())
+    .api_route("/mail", mail_active_route())
+    .api_route("/groups", list_groups_simple_route())
+    .api_route("/avatar", reset_user_avatar_route::<UpdateMessage>())
+    .api_route("/password", reset_user_password_route())
     .api_route("/", put_with(edit_user, |op| op.id("editUser")))
     .api_route("/{uuid}", get_with(user_info, |op| op.id("userInfo")))
     .api_route(

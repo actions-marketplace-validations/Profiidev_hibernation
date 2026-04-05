@@ -1,7 +1,7 @@
 use aide::axum::ApiRouter;
 use aide::axum::routing::get_with;
 use axum::Json;
-use centaurus::backend::setup;
+use centaurus::backend::setup::complete_setup_route;
 use centaurus::db::tables::ConnectionExt;
 use centaurus::{db::init::Connection, error::Result};
 use schemars::JsonSchema;
@@ -12,8 +12,8 @@ use crate::cache::storage::FileStorage;
 
 pub fn router() -> ApiRouter {
   ApiRouter::new()
+    .api_route("/", complete_setup_route())
     .api_route("/", get_with(is_setup, |op| op.id("isSetup")))
-    .merge(setup::router())
 }
 
 #[derive(Serialize, JsonSchema)]
