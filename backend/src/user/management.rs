@@ -21,8 +21,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::permissions::CacheEdit;
-use crate::updater::{UpdateMessage, Updater};
+use crate::utils::CacheEdit;
+use crate::utils::{UpdateMessage, Updater};
 use crate::user::template;
 use crate::{
   config::Config,

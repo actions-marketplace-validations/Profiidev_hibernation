@@ -23,8 +23,8 @@ use crate::{
     cache::{CacheDetails, CacheInfo},
     nar::{SearchOrder, SearchSort},
   },
-  permissions::CacheCreate,
-  updater::{UpdateMessage, Updater},
+  utils::CacheCreate,
+  utils::{UpdateMessage, Updater},
 };
 
 pub fn router() -> ApiRouter {

@@ -21,7 +21,7 @@ use uuid::Uuid;
 
 use crate::{
   db::DBTrait,
-  updater::{UpdateMessage, Updater},
+  utils::{UpdateMessage, Updater},
 };
 
 pub const CLI_TOKEN_LEN: usize = 32;

@@ -9,7 +9,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::updater::{UpdateMessage, Updater};
+use crate::utils::{UpdateMessage, Updater};
 use crate::{cli, db::DBTrait};
 
 pub fn router() -> ApiRouter {

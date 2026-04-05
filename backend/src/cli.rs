@@ -30,7 +30,7 @@ use uuid::Uuid;
 use crate::{
   auth::cli_auth::CLI_TOKEN_LEN,
   db::DBTrait,
-  updater::{UpdateMessage, Updater},
+  utils::{UpdateMessage, Updater},
 };
 
 pub fn router(rate_limiter: &mut RateLimiter) -> ApiRouter {

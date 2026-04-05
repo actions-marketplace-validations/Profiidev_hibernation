@@ -18,7 +18,7 @@ use serde::Serialize;
 use url::Url;
 
 use crate::config::Config;
-use crate::updater::{UpdateMessage, Updater};
+use crate::utils::{UpdateMessage, Updater};
 
 pub fn router() -> ApiRouter {
   ApiRouter::new()

@@ -10,14 +10,14 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::updater::{UpdateMessage, Updater};
+use crate::utils::{UpdateMessage, Updater};
 use crate::{
   db::{
     DBTrait,
     cache::SimpleCacheInfo,
     group::{CacheMapping, GroupDetails},
   },
-  permissions::CacheEdit,
+  utils::CacheEdit,
 };
 
 pub fn router() -> ApiRouter {

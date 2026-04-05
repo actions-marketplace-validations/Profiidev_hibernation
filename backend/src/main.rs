@@ -17,7 +17,7 @@ use centaurus::{
 use dotenvy::dotenv;
 use tracing::info;
 
-use crate::{config::Config, updater::UpdateMessage};
+use crate::{config::Config, utils::UpdateMessage};
 
 mod auth;
 mod cache;
@@ -26,11 +26,10 @@ mod config;
 mod db;
 mod group;
 mod nix;
-mod permissions;
 mod settings;
 mod setup;
 mod token;
-mod updater;
+mod utils;
 mod user;
 
 #[tokio::main]

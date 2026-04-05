@@ -29,7 +29,7 @@ pub async fn create_admin_group(db: &Connection) -> Result<()> {
       info!("Adding missing permissions to admin group");
 
       let existing_perms = db.group().get_group_permissions(id).await?;
-      let all_perms = crate::permissions::permissions();
+      let all_perms = crate::utils::permissions();
       let missing_perms: Vec<String> = all_perms
         .into_iter()
         .filter(|p| !existing_perms.contains(&p.to_string()))
@@ -48,7 +48,7 @@ pub async fn create_admin_group(db: &Connection) -> Result<()> {
     None => {
       info!("Admin group not found, creating it with all permissions");
 
-      let all_perms: Vec<String> = crate::permissions::permissions()
+      let all_perms: Vec<String> = crate::utils::permissions()
         .into_iter()
         .map(|p| p.to_string())
         .collect();
