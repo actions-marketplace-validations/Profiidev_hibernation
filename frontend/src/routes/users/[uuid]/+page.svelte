@@ -16,7 +16,6 @@
     resetPassword
   } from './schema.svelte.js';
   import type { FormValue } from 'positron-components/components/form/types';
-  import { RequestError } from 'positron-components/backend';
   import FormInput from 'positron-components/components/form/form-input.svelte';
   import Save from '@lucide/svelte/icons/save';
   import { Spinner } from 'positron-components/components/ui/spinner';

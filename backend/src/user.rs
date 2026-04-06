@@ -48,7 +48,7 @@ fn management() -> ApiRouter {
     .api_route("/avatar", reset_user_avatar_route::<UpdateMessage>())
     .api_route("/password", reset_user_password_route())
     .api_route("/", put_with(edit_user, |op| op.id("editUser")))
-    .api_route("/{uuid}", get_with(user_info, |op| op.id("userInfo")))
+    .api_route("/{uuid}", get_with(user_info, |op| op.id("userInfoDetail")))
     .api_route(
       "/caches",
       get_with(list_caches_simple, |op| op.id("listCachesSimple")),

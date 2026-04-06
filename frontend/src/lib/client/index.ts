@@ -29,7 +29,7 @@ export {
   key,
   listCaches,
   listCachesSimple,
-  listCachesSimple2,
+  listCachesSimpleGroup,
   listGroups,
   listGroupsSimple,
   listTokens,
@@ -58,7 +58,7 @@ export {
   uploadInfo,
   uploadNar,
   uploadPath,
-  userInfo
+  userInfoDetail
 } from './sdk.gen';
 export {
   AccessType,
@@ -202,12 +202,12 @@ export {
   type ListCachesErrors,
   type ListCachesResponse,
   type ListCachesResponses,
-  type ListCachesSimple2Data,
-  type ListCachesSimple2Errors,
-  type ListCachesSimple2Response,
-  type ListCachesSimple2Responses,
   type ListCachesSimpleData,
   type ListCachesSimpleErrors,
+  type ListCachesSimpleGroupData,
+  type ListCachesSimpleGroupErrors,
+  type ListCachesSimpleGroupResponse,
+  type ListCachesSimpleGroupResponses,
   type ListCachesSimpleResponse,
   type ListCachesSimpleResponses,
   type ListGroupResponse,
@@ -345,11 +345,11 @@ export {
   type UserAvatarResetRequest,
   type UserEditReq,
   type UserInfo,
-  type UserInfo2,
-  type UserInfoData,
-  type UserInfoErrors,
-  type UserInfoResponse,
-  type UserInfoResponses,
+  type UserInfoDetailData,
+  type UserInfoDetailErrors,
+  type UserInfoDetailResponse,
+  type UserInfoDetailResponses,
+  type UserListInfo,
   type UserSettings,
   type UserViewPath
 } from './types.gen';

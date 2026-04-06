@@ -32,7 +32,7 @@ pub fn router() -> ApiRouter {
     .api_route("/users", list_users_simple_route())
     .api_route(
       "/caches",
-      get_with(list_caches_simple, |op| op.id("listCachesSimple")),
+      get_with(list_caches_simple, |op| op.id("listCachesSimpleGroup")),
     )
 }
 

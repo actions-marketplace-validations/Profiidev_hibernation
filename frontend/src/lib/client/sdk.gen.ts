@@ -81,11 +81,11 @@ import type {
   ListCachesData,
   ListCachesErrors,
   ListCachesResponses,
-  ListCachesSimple2Data,
-  ListCachesSimple2Errors,
-  ListCachesSimple2Responses,
   ListCachesSimpleData,
   ListCachesSimpleErrors,
+  ListCachesSimpleGroupData,
+  ListCachesSimpleGroupErrors,
+  ListCachesSimpleGroupResponses,
   ListCachesSimpleResponses,
   ListGroupsData,
   ListGroupsErrors,
@@ -164,9 +164,9 @@ import type {
   UploadPathData,
   UploadPathErrors,
   UploadPathResponses,
-  UserInfoData,
-  UserInfoErrors,
-  UserInfoResponses
+  UserInfoDetailData,
+  UserInfoDetailErrors,
+  UserInfoDetailResponses
 } from './types.gen';
 
 export type Options<
@@ -360,12 +360,12 @@ export const resetUserPassword = <ThrowOnError extends boolean = false>(
     }
   });
 
-export const userInfo = <ThrowOnError extends boolean = false>(
-  options: Options<UserInfoData, ThrowOnError>
+export const userInfoDetail = <ThrowOnError extends boolean = false>(
+  options: Options<UserInfoDetailData, ThrowOnError>
 ) =>
   (options.client ?? client).get<
-    UserInfoResponses,
-    UserInfoErrors,
+    UserInfoDetailResponses,
+    UserInfoDetailErrors,
     ThrowOnError
   >({ url: '/api/user/management/{uuid}', ...options });
 
@@ -609,12 +609,12 @@ export const listUsersSimple = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({ url: '/api/group/users', ...options });
 
-export const listCachesSimple2 = <ThrowOnError extends boolean = false>(
-  options?: Options<ListCachesSimple2Data, ThrowOnError>
+export const listCachesSimpleGroup = <ThrowOnError extends boolean = false>(
+  options?: Options<ListCachesSimpleGroupData, ThrowOnError>
 ) =>
   (options?.client ?? client).get<
-    ListCachesSimple2Responses,
-    ListCachesSimple2Errors,
+    ListCachesSimpleGroupResponses,
+    ListCachesSimpleGroupErrors,
     ThrowOnError
   >({ url: '/api/group/caches', ...options });
 

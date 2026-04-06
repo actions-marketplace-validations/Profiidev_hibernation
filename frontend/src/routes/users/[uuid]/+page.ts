@@ -4,11 +4,11 @@ import {
   listCachesSimple,
   listGroupsSimple,
   mailActive,
-  userInfo
+  userInfoDetail
 } from '$lib/client';
 
 export const load: PageLoad = async ({ params, fetch }) => {
-  let resPromise = userInfo({
+  let resPromise = userInfoDetail({
     path: { uuid: params.uuid },
     fetch
   });

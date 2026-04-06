@@ -1208,9 +1208,9 @@ dependencies = [
 
 [[package]]
 name = "centaurus"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea85a9febcbb2f0552ad462512d70dcc7dfebcdda98ae3313b2fe18e0fc52b89"
+checksum = "d3070585469c9339168b4de1156b24e8adf95234771b86d41adc54cb13d5fb3f"
 dependencies = [
  "addr",
  "aide",

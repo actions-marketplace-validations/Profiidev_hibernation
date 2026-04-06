@@ -377,16 +377,16 @@ export type UserEditReq = {
 export type UserInfo = {
   avatar?: string | null;
   email: string;
-  groups: Array<SimpleGroupInfo>;
   name: string;
+  permissions: Array<string>;
   uuid: string;
 };
 
-export type UserInfo2 = {
+export type UserListInfo = {
   avatar?: string | null;
   email: string;
+  groups: Array<SimpleGroupInfo>;
   name: string;
-  permissions: Array<string>;
   uuid: string;
 };
 
@@ -608,7 +608,7 @@ export type ListUsersErrors = {
 };
 
 export type ListUsersResponses = {
-  200: Array<UserInfo>;
+  200: Array<UserListInfo>;
 };
 
 export type ListUsersResponse = ListUsersResponses[keyof ListUsersResponses];
@@ -821,7 +821,7 @@ export type ResetUserPasswordResponses = {
   200: unknown;
 };
 
-export type UserInfoData = {
+export type UserInfoDetailData = {
   body?: never;
   path: {
     uuid: string;
@@ -830,7 +830,7 @@ export type UserInfoData = {
   url: '/api/user/management/{uuid}';
 };
 
-export type UserInfoErrors = {
+export type UserInfoDetailErrors = {
   /**
    * An error occurred
    */
@@ -841,11 +841,12 @@ export type UserInfoErrors = {
   '5XX': unknown;
 };
 
-export type UserInfoResponses = {
+export type UserInfoDetailResponses = {
   200: DetailUserInfo;
 };
 
-export type UserInfoResponse = UserInfoResponses[keyof UserInfoResponses];
+export type UserInfoDetailResponse =
+  UserInfoDetailResponses[keyof UserInfoDetailResponses];
 
 export type ListCachesSimpleData = {
   body?: never;
@@ -1009,7 +1010,7 @@ export type InfoErrors = {
 };
 
 export type InfoResponses = {
-  200: UserInfo2;
+  200: UserInfo;
 };
 
 export type InfoResponse = InfoResponses[keyof InfoResponses];
@@ -1448,14 +1449,14 @@ export type ListUsersSimpleResponses = {
 export type ListUsersSimpleResponse =
   ListUsersSimpleResponses[keyof ListUsersSimpleResponses];
 
-export type ListCachesSimple2Data = {
+export type ListCachesSimpleGroupData = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/group/caches';
 };
 
-export type ListCachesSimple2Errors = {
+export type ListCachesSimpleGroupErrors = {
   /**
    * An error occurred
    */
@@ -1466,12 +1467,12 @@ export type ListCachesSimple2Errors = {
   '5XX': unknown;
 };
 
-export type ListCachesSimple2Responses = {
+export type ListCachesSimpleGroupResponses = {
   200: Array<SimpleCacheInfo>;
 };
 
-export type ListCachesSimple2Response =
-  ListCachesSimple2Responses[keyof ListCachesSimple2Responses];
+export type ListCachesSimpleGroupResponse =
+  ListCachesSimpleGroupResponses[keyof ListCachesSimpleGroupResponses];
 
 export type NewCodeData = {
   body?: never;
