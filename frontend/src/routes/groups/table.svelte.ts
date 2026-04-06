@@ -1,9 +1,9 @@
 import type { ColumnDef } from '@tanstack/table-core';
 import * as DataTable from 'positron-components/components/ui/data-table';
 import { createColumn } from 'positron-components/components/table/helpers.svelte';
-import Actions from '$lib/components/table/Actions.svelte';
 import { Permission } from '$lib/permissions.svelte';
 import type { GroupInfo, SimpleUserInfo, UserInfo } from '$lib/client';
+import Actions from 'positron-components/components/table/actions.svelte';
 
 export const columns = ({
   deleteGroup,
@@ -41,7 +41,7 @@ export const columns = ({
       return DataTable.renderComponent(Actions, {
         edit_disabled: disabled,
         delete_disabled: disabled,
-        editHref: `/groups/${row.original.id}`,
+        edit: `/groups/${row.original.id}`,
         remove: () => deleteGroup(row.original)
       });
     },
