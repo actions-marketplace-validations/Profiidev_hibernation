@@ -28,7 +28,7 @@ export const columns = ({
       return DataTable.renderComponent(Actions, {
         edit_disabled: false,
         delete_disabled: false,
-        editHref: `/tokens/${row.original.uuid}`,
+        edit: `/tokens/${row.original.uuid}`,
         remove: () => deleteToken(row.original)
       });
     },

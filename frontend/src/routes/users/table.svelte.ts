@@ -42,7 +42,7 @@ export const columns = ({
       return DataTable.renderComponent(Actions, {
         edit_disabled: disabled,
         delete_disabled: disabled,
-        editHref: `/users/${row.original.uuid}`,
+        edit: `/users/${row.original.uuid}`,
         remove: () => deleteUser(row.original)
       });
     },

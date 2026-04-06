@@ -41,7 +41,7 @@ export const columns = ({
       return DataTable.renderComponent(Actions, {
         edit_disabled: disabled,
         delete_disabled: disabled,
-        editHref: `/groups/${row.original.id}`,
+        edit: `/groups/${row.original.id}`,
         remove: () => deleteGroup(row.original)
       });
     },
