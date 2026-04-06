@@ -8,11 +8,11 @@
   import { toast } from 'positron-components/components/util/general';
   import { invalidate } from '$app/navigation';
   import { Permission } from '$lib/permissions.svelte';
-  import { deleteUser, type UserInfo2 } from '$lib/client';
+  import { deleteUser, type UserListInfo } from '$lib/client';
 
   const { data } = $props();
 
-  let selected: UserInfo2 | undefined = $state();
+  let selected: UserListInfo | undefined = $state();
   let deleteOpen = $state(false);
   let isLoading = $state(false);
 
@@ -49,7 +49,7 @@
     }
   };
 
-  const startDeleteUser = (item: UserInfo2) => {
+  const startDeleteUser = (item: UserListInfo) => {
     selected = item;
     deleteOpen = true;
   };

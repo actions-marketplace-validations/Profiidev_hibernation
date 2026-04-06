@@ -43,7 +43,7 @@ async fn main() -> Result<()> {
   if tty {
     init_logging(level);
   } else {
-    centaurus::init::logging::init_logging(level);
+    centaurus::logging::init_logging(level);
   }
 
   let cli = Cli::parse();

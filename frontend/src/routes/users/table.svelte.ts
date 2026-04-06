@@ -4,15 +4,15 @@ import { createColumn } from 'positron-components/components/table/helpers.svelt
 import Actions from '$lib/components/table/Actions.svelte';
 import { Permission } from '$lib/permissions.svelte';
 import SimpleAvatar from 'positron-components/components/util/simple-avatar.svelte';
-import type { SimpleGroupInfo, UserInfo, UserInfo2 } from '$lib/client';
+import type { SimpleGroupInfo, UserInfo, UserListInfo } from '$lib/client';
 
 export const columns = ({
   deleteUser,
   user
 }: {
-  deleteUser: (user: UserInfo2) => void;
+  deleteUser: (user: UserListInfo) => void;
   user?: UserInfo;
-}): ColumnDef<UserInfo2>[] => [
+}): ColumnDef<UserListInfo>[] => [
   {
     accessorKey: 'avatar',
     header: () => {},

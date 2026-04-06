@@ -73,6 +73,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(DOWNSTREAM_CACHE_CACHE_ID_INDEX_NAME)
           .table(DownstreamCache::Table)
           .col(DownstreamCache::CacheId)

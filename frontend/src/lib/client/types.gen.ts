@@ -382,7 +382,7 @@ export type UserInfo = {
   uuid: string;
 };
 
-export type UserInfo2 = {
+export type UserListInfo = {
   avatar?: string | null;
   email: string;
   groups: Array<SimpleGroupInfo>;
@@ -456,6 +456,13 @@ export type CompleteSetupErrors = {
 
 export type CompleteSetupError = CompleteSetupErrors[keyof CompleteSetupErrors];
 
+export type TestTokenData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/auth/test_token';
+};
+
 export type KeyData = {
   body?: never;
   path?: never;
@@ -519,53 +526,6 @@ export type LogoutErrors = {
   '5XX': unknown;
 };
 
-export type TestTokenData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/auth/test_token';
-};
-
-export type OidcUrlData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/auth/oidc/url';
-};
-
-export type OidcUrlErrors = {
-  /**
-   * An error occurred
-   */
-  '4XX': unknown;
-  /**
-   * An error occurred
-   */
-  '5XX': unknown;
-};
-
-export type OidcCallbackData = {
-  body?: never;
-  path?: never;
-  query: {
-    code?: string | null;
-    error?: string | null;
-    state: string;
-  };
-  url: '/api/auth/oidc/callback';
-};
-
-export type OidcCallbackErrors = {
-  /**
-   * An error occurred
-   */
-  '4XX': unknown;
-  /**
-   * An error occurred
-   */
-  '5XX': unknown;
-};
-
 export type AuthConfigData = {
   body?: never;
   path?: never;
@@ -589,6 +549,329 @@ export type AuthConfigResponses = {
 };
 
 export type AuthConfigResponse = AuthConfigResponses[keyof AuthConfigResponses];
+
+export type DeleteUserData = {
+  body: DeleteUserRequest;
+  path?: never;
+  query?: never;
+  url: '/api/user/management';
+};
+
+export type DeleteUserErrors = {
+  /**
+   * Failed to parse the request body as JSON
+   */
+  400: string;
+  /**
+   * Expected request with `Content-Type: application/json`
+   */
+  415: string;
+  /**
+   * Failed to deserialize the JSON body into the target type
+   */
+  422: string;
+  /**
+   * An error occurred
+   */
+  '4XX': unknown;
+  /**
+   * An error occurred
+   */
+  '5XX': unknown;
+};
+
+export type DeleteUserError = DeleteUserErrors[keyof DeleteUserErrors];
+
+export type DeleteUserResponses = {
+  /**
+   * no content
+   */
+  200: unknown;
+};
+
+export type ListUsersData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/user/management';
+};
+
+export type ListUsersErrors = {
+  /**
+   * An error occurred
+   */
+  '4XX': unknown;
+  /**
+   * An error occurred
+   */
+  '5XX': unknown;
+};
+
+export type ListUsersResponses = {
+  200: Array<UserListInfo>;
+};
+
+export type ListUsersResponse = ListUsersResponses[keyof ListUsersResponses];
+
+export type CreateUserData = {
+  body: CreateUser;
+  path?: never;
+  query?: never;
+  url: '/api/user/management';
+};
+
+export type CreateUserErrors = {
+  /**
+   * Failed to parse the request body as JSON
+   */
+  400: string;
+  /**
+   * Expected request with `Content-Type: application/json`
+   */
+  415: string;
+  /**
+   * Failed to deserialize the JSON body into the target type
+   */
+  422: string;
+  /**
+   * An error occurred
+   */
+  '4XX': unknown;
+  /**
+   * An error occurred
+   */
+  '5XX': unknown;
+};
+
+export type CreateUserError = CreateUserErrors[keyof CreateUserErrors];
+
+export type CreateUserResponses = {
+  200: CreateUserResponse;
+};
+
+export type CreateUserResponse2 =
+  CreateUserResponses[keyof CreateUserResponses];
+
+export type EditUserData = {
+  body: UserEditReq;
+  path?: never;
+  query?: never;
+  url: '/api/user/management';
+};
+
+export type EditUserErrors = {
+  /**
+   * Failed to parse the request body as JSON
+   */
+  400: string;
+  /**
+   * Expected request with `Content-Type: application/json`
+   */
+  415: string;
+  /**
+   * Failed to deserialize the JSON body into the target type
+   */
+  422: string;
+  /**
+   * An error occurred
+   */
+  '4XX': unknown;
+  /**
+   * An error occurred
+   */
+  '5XX': unknown;
+};
+
+export type EditUserError = EditUserErrors[keyof EditUserErrors];
+
+export type EditUserResponses = {
+  /**
+   * no content
+   */
+  200: unknown;
+};
+
+export type MailActiveData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/user/management/mail';
+};
+
+export type MailActiveErrors = {
+  /**
+   * An error occurred
+   */
+  '4XX': unknown;
+  /**
+   * An error occurred
+   */
+  '5XX': unknown;
+};
+
+export type MailActiveResponses = {
+  200: MailActiveResponse;
+};
+
+export type MailActiveResponse2 =
+  MailActiveResponses[keyof MailActiveResponses];
+
+export type ListGroupsSimpleData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/user/management/groups';
+};
+
+export type ListGroupsSimpleErrors = {
+  /**
+   * An error occurred
+   */
+  '4XX': unknown;
+  /**
+   * An error occurred
+   */
+  '5XX': unknown;
+};
+
+export type ListGroupsSimpleResponses = {
+  200: Array<SimpleGroupInfo>;
+};
+
+export type ListGroupsSimpleResponse =
+  ListGroupsSimpleResponses[keyof ListGroupsSimpleResponses];
+
+export type ResetUserAvatarData = {
+  body: UserAvatarResetRequest;
+  path?: never;
+  query?: never;
+  url: '/api/user/management/avatar';
+};
+
+export type ResetUserAvatarErrors = {
+  /**
+   * Failed to parse the request body as JSON
+   */
+  400: string;
+  /**
+   * Expected request with `Content-Type: application/json`
+   */
+  415: string;
+  /**
+   * Failed to deserialize the JSON body into the target type
+   */
+  422: string;
+  /**
+   * An error occurred
+   */
+  '4XX': unknown;
+  /**
+   * An error occurred
+   */
+  '5XX': unknown;
+};
+
+export type ResetUserAvatarError =
+  ResetUserAvatarErrors[keyof ResetUserAvatarErrors];
+
+export type ResetUserAvatarResponses = {
+  /**
+   * no content
+   */
+  200: unknown;
+};
+
+export type ResetUserPasswordData = {
+  body: ResetUserPassword;
+  path?: never;
+  query?: never;
+  url: '/api/user/management/password';
+};
+
+export type ResetUserPasswordErrors = {
+  /**
+   * Failed to parse the request body as JSON
+   */
+  400: string;
+  /**
+   * Expected request with `Content-Type: application/json`
+   */
+  415: string;
+  /**
+   * Failed to deserialize the JSON body into the target type
+   */
+  422: string;
+  /**
+   * An error occurred
+   */
+  '4XX': unknown;
+  /**
+   * An error occurred
+   */
+  '5XX': unknown;
+};
+
+export type ResetUserPasswordError =
+  ResetUserPasswordErrors[keyof ResetUserPasswordErrors];
+
+export type ResetUserPasswordResponses = {
+  /**
+   * no content
+   */
+  200: unknown;
+};
+
+export type UserInfoDetailData = {
+  body?: never;
+  path: {
+    uuid: string;
+  };
+  query?: never;
+  url: '/api/user/management/{uuid}';
+};
+
+export type UserInfoDetailErrors = {
+  /**
+   * An error occurred
+   */
+  '4XX': unknown;
+  /**
+   * An error occurred
+   */
+  '5XX': unknown;
+};
+
+export type UserInfoDetailResponses = {
+  200: DetailUserInfo;
+};
+
+export type UserInfoDetailResponse =
+  UserInfoDetailResponses[keyof UserInfoDetailResponses];
+
+export type ListCachesSimpleData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/user/management/caches';
+};
+
+export type ListCachesSimpleErrors = {
+  /**
+   * An error occurred
+   */
+  '4XX': unknown;
+  /**
+   * An error occurred
+   */
+  '5XX': unknown;
+};
+
+export type ListCachesSimpleResponses = {
+  200: Array<SimpleCacheInfo>;
+};
+
+export type ListCachesSimpleResponse =
+  ListCachesSimpleResponses[keyof ListCachesSimpleResponses];
 
 export type UpdateAvatarData = {
   body: AvatarUpdate;
@@ -731,328 +1014,6 @@ export type InfoResponses = {
 };
 
 export type InfoResponse = InfoResponses[keyof InfoResponses];
-
-export type DeleteUserData = {
-  body: DeleteUserRequest;
-  path?: never;
-  query?: never;
-  url: '/api/user/management';
-};
-
-export type DeleteUserErrors = {
-  /**
-   * Failed to parse the request body as JSON
-   */
-  400: string;
-  /**
-   * Expected request with `Content-Type: application/json`
-   */
-  415: string;
-  /**
-   * Failed to deserialize the JSON body into the target type
-   */
-  422: string;
-  /**
-   * An error occurred
-   */
-  '4XX': unknown;
-  /**
-   * An error occurred
-   */
-  '5XX': unknown;
-};
-
-export type DeleteUserError = DeleteUserErrors[keyof DeleteUserErrors];
-
-export type DeleteUserResponses = {
-  /**
-   * no content
-   */
-  200: unknown;
-};
-
-export type ListUsersData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/user/management';
-};
-
-export type ListUsersErrors = {
-  /**
-   * An error occurred
-   */
-  '4XX': unknown;
-  /**
-   * An error occurred
-   */
-  '5XX': unknown;
-};
-
-export type ListUsersResponses = {
-  200: Array<UserInfo2>;
-};
-
-export type ListUsersResponse = ListUsersResponses[keyof ListUsersResponses];
-
-export type CreateUserData = {
-  body: CreateUser;
-  path?: never;
-  query?: never;
-  url: '/api/user/management';
-};
-
-export type CreateUserErrors = {
-  /**
-   * Failed to parse the request body as JSON
-   */
-  400: string;
-  /**
-   * Expected request with `Content-Type: application/json`
-   */
-  415: string;
-  /**
-   * Failed to deserialize the JSON body into the target type
-   */
-  422: string;
-  /**
-   * An error occurred
-   */
-  '4XX': unknown;
-  /**
-   * An error occurred
-   */
-  '5XX': unknown;
-};
-
-export type CreateUserError = CreateUserErrors[keyof CreateUserErrors];
-
-export type CreateUserResponses = {
-  200: CreateUserResponse;
-};
-
-export type CreateUserResponse2 =
-  CreateUserResponses[keyof CreateUserResponses];
-
-export type EditUserData = {
-  body: UserEditReq;
-  path?: never;
-  query?: never;
-  url: '/api/user/management';
-};
-
-export type EditUserErrors = {
-  /**
-   * Failed to parse the request body as JSON
-   */
-  400: string;
-  /**
-   * Expected request with `Content-Type: application/json`
-   */
-  415: string;
-  /**
-   * Failed to deserialize the JSON body into the target type
-   */
-  422: string;
-  /**
-   * An error occurred
-   */
-  '4XX': unknown;
-  /**
-   * An error occurred
-   */
-  '5XX': unknown;
-};
-
-export type EditUserError = EditUserErrors[keyof EditUserErrors];
-
-export type EditUserResponses = {
-  /**
-   * no content
-   */
-  200: unknown;
-};
-
-export type UserInfoData = {
-  body?: never;
-  path: {
-    uuid: string;
-  };
-  query?: never;
-  url: '/api/user/management/{uuid}';
-};
-
-export type UserInfoErrors = {
-  /**
-   * An error occurred
-   */
-  '4XX': unknown;
-  /**
-   * An error occurred
-   */
-  '5XX': unknown;
-};
-
-export type UserInfoResponses = {
-  200: DetailUserInfo;
-};
-
-export type UserInfoResponse = UserInfoResponses[keyof UserInfoResponses];
-
-export type MailActiveData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/user/management/mail';
-};
-
-export type MailActiveErrors = {
-  /**
-   * An error occurred
-   */
-  '4XX': unknown;
-  /**
-   * An error occurred
-   */
-  '5XX': unknown;
-};
-
-export type MailActiveResponses = {
-  200: MailActiveResponse;
-};
-
-export type MailActiveResponse2 =
-  MailActiveResponses[keyof MailActiveResponses];
-
-export type ListGroupsSimpleData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/user/management/groups';
-};
-
-export type ListGroupsSimpleErrors = {
-  /**
-   * An error occurred
-   */
-  '4XX': unknown;
-  /**
-   * An error occurred
-   */
-  '5XX': unknown;
-};
-
-export type ListGroupsSimpleResponses = {
-  200: Array<SimpleGroupInfo>;
-};
-
-export type ListGroupsSimpleResponse =
-  ListGroupsSimpleResponses[keyof ListGroupsSimpleResponses];
-
-export type ListCachesSimpleData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/user/management/caches';
-};
-
-export type ListCachesSimpleErrors = {
-  /**
-   * An error occurred
-   */
-  '4XX': unknown;
-  /**
-   * An error occurred
-   */
-  '5XX': unknown;
-};
-
-export type ListCachesSimpleResponses = {
-  200: Array<SimpleCacheInfo>;
-};
-
-export type ListCachesSimpleResponse =
-  ListCachesSimpleResponses[keyof ListCachesSimpleResponses];
-
-export type ResetUserAvatarData = {
-  body: UserAvatarResetRequest;
-  path?: never;
-  query?: never;
-  url: '/api/user/management/avatar';
-};
-
-export type ResetUserAvatarErrors = {
-  /**
-   * Failed to parse the request body as JSON
-   */
-  400: string;
-  /**
-   * Expected request with `Content-Type: application/json`
-   */
-  415: string;
-  /**
-   * Failed to deserialize the JSON body into the target type
-   */
-  422: string;
-  /**
-   * An error occurred
-   */
-  '4XX': unknown;
-  /**
-   * An error occurred
-   */
-  '5XX': unknown;
-};
-
-export type ResetUserAvatarError =
-  ResetUserAvatarErrors[keyof ResetUserAvatarErrors];
-
-export type ResetUserAvatarResponses = {
-  /**
-   * no content
-   */
-  200: unknown;
-};
-
-export type ResetUserPasswordData = {
-  body: ResetUserPassword;
-  path?: never;
-  query?: never;
-  url: '/api/user/management/password';
-};
-
-export type ResetUserPasswordErrors = {
-  /**
-   * Failed to parse the request body as JSON
-   */
-  400: string;
-  /**
-   * Expected request with `Content-Type: application/json`
-   */
-  415: string;
-  /**
-   * Failed to deserialize the JSON body into the target type
-   */
-  422: string;
-  /**
-   * An error occurred
-   */
-  '4XX': unknown;
-  /**
-   * An error occurred
-   */
-  '5XX': unknown;
-};
-
-export type ResetUserPasswordError =
-  ResetUserPasswordErrors[keyof ResetUserPasswordErrors];
-
-export type ResetUserPasswordResponses = {
-  /**
-   * no content
-   */
-  200: unknown;
-};
 
 export type GetGeneralSettingsData = {
   body?: never;
@@ -1488,14 +1449,14 @@ export type ListUsersSimpleResponses = {
 export type ListUsersSimpleResponse =
   ListUsersSimpleResponses[keyof ListUsersSimpleResponses];
 
-export type ListCachesSimple2Data = {
+export type ListCachesSimpleGroupData = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/group/caches';
 };
 
-export type ListCachesSimple2Errors = {
+export type ListCachesSimpleGroupErrors = {
   /**
    * An error occurred
    */
@@ -1506,12 +1467,12 @@ export type ListCachesSimple2Errors = {
   '5XX': unknown;
 };
 
-export type ListCachesSimple2Responses = {
+export type ListCachesSimpleGroupResponses = {
   200: Array<SimpleCacheInfo>;
 };
 
-export type ListCachesSimple2Response =
-  ListCachesSimple2Responses[keyof ListCachesSimple2Responses];
+export type ListCachesSimpleGroupResponse =
+  ListCachesSimpleGroupResponses[keyof ListCachesSimpleGroupResponses];
 
 export type NewCodeData = {
   body?: never;

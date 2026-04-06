@@ -6,7 +6,7 @@ use axum::{
   Extension, Json,
   extract::{FromRequestParts, Path},
 };
-use centaurus::{bail, db::init::Connection, error::Result};
+use centaurus::{backend::auth::jwt_auth::JwtAuth, bail, db::init::Connection, error::Result};
 use chrono::{DateTime, Utc};
 use entity::sea_orm_active_enums::{AccessType, EvictionPolicy};
 use regex::Regex;
@@ -17,15 +17,14 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::{
-  auth::jwt_auth::JwtAuth,
   cache::state::CacheEvictionState,
   db::{
     DBTrait,
     cache::{CacheDetails, CacheInfo},
     nar::{SearchOrder, SearchSort},
   },
-  permissions::CacheCreate,
-  ws::state::{UpdateMessage, Updater},
+  utils::CacheCreate,
+  utils::{UpdateMessage, Updater},
 };
 
 pub fn router() -> ApiRouter {

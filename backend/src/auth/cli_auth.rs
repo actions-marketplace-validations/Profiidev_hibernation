@@ -1,16 +1,15 @@
 use std::marker::PhantomData;
 
 use aide::OperationIo;
-use axum::{
-  RequestPartsExt,
-  extract::{FromRequestParts, OptionalFromRequestParts},
-};
-use axum_extra::{
-  TypedHeader,
-  headers::{Authorization, authorization::Basic},
-};
+use axum::extract::{FromRequestParts, OptionalFromRequestParts};
 use centaurus::{
-  auth::{jwt::jwt_from_request, pw::PasswordState},
+  backend::auth::{
+    jwt::jwt_from_request,
+    jwt_auth,
+    jwt_state::JWT_COOKIE_NAME,
+    permission::{NoPerm, Permission},
+    pw_state::PasswordState,
+  },
   bail,
   db::init::Connection,
   error::ErrorReport,
@@ -21,10 +20,8 @@ use http::request::Parts;
 use uuid::Uuid;
 
 use crate::{
-  auth::{jwt_auth, jwt_state::JWT_COOKIE_NAME},
   db::DBTrait,
-  permissions::{NoPerm, Permission},
-  ws::state::{UpdateMessage, Updater},
+  utils::{UpdateMessage, Updater},
 };
 
 pub const CLI_TOKEN_LEN: usize = 32;
@@ -39,21 +36,7 @@ impl<S: Sync, P: Permission> FromRequestParts<S> for CliAuth<P> {
   type Rejection = ErrorReport;
 
   async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
-    let token = match jwt_from_request(parts, JWT_COOKIE_NAME).await {
-      Ok(token) => token,
-      Err(e) => {
-        let Some(token) = parts
-          .extract::<TypedHeader<Authorization<Basic>>>()
-          .await
-          .ok()
-          .map(|TypedHeader(Authorization(basic))| basic.password().to_string())
-        else {
-          return Err(e);
-        };
-
-        token
-      }
-    };
+    let token = jwt_from_request(parts, JWT_COOKIE_NAME).await?;
 
     let db = parts.extract_state::<Connection>().await;
     let user = if token.len() == CLI_TOKEN_LEN {

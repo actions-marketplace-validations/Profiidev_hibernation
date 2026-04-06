@@ -1,12 +1,11 @@
 use std::{io::IsTerminal, path::PathBuf};
 
 use bytes::Bytes;
-use centaurus::{error::Result, eyre::Context};
+use centaurus::{VERSION_HEADER_NAME, error::Result, eyre::Context};
 use reqwest::{Body, Client, Method, RequestBuilder, Response};
 use serde::Deserialize;
-use shared::{
-  HIBERNATION_VERSION_HEADER,
-  api::push::{UploadFinishRequest, UploadInfoResponse, UploadPathRequest, UploadPathResponse},
+use shared::api::push::{
+  UploadFinishRequest, UploadInfoResponse, UploadPathRequest, UploadPathResponse,
 };
 use tracing::{error, warn};
 use url::Url;
@@ -205,7 +204,7 @@ impl ApiClient {
 fn check_server_version(res: &Response) {
   if let Some(version) = res
     .headers()
-    .get(HIBERNATION_VERSION_HEADER)
+    .get(VERSION_HEADER_NAME)
     .and_then(|v| v.to_str().ok())
   {
     if version != env!("CARGO_PKG_VERSION") {

@@ -1,12 +1,11 @@
+use centaurus::db::migrations::{groups::Group, user::User};
 use sea_orm_migration::{
   prelude::{extension::postgres::Type, *},
   schema::*,
   sea_orm::DatabaseBackend,
 };
 
-use crate::{
-  m20260123_144752_user::User, m20260126_155842_group::Group, m20260319_192505_cache::Cache,
-};
+use crate::m20260319_192505_cache::Cache;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -81,6 +80,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(CACHE_ACCESS_CACHE_ID_INDEX_NAME)
           .table(CacheAccess::Table)
           .col(CacheAccess::CacheId)
@@ -91,6 +91,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(CACHE_ACCESS_USER_ID_INDEX_NAME)
           .table(CacheAccess::Table)
           .col(CacheAccess::UserId)
@@ -101,6 +102,7 @@ impl MigrationTrait for Migration {
     manager
       .create_index(
         Index::create()
+          .if_not_exists()
           .name(CACHE_ACCESS_GROUP_ID_INDEX_NAME)
           .table(CacheAccess::Table)
           .col(CacheAccess::GroupId)

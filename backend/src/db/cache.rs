@@ -1,4 +1,6 @@
-use centaurus::error::ErrorReportStatusExt;
+use centaurus::{
+  backend::auth::permission::Permission, db::tables::group::GroupTable, error::ErrorReportStatusExt,
+};
 use entity::{
   cache, cache_access, downstream_cache, group_user, nar, nar_info,
   sea_orm_active_enums::{AccessType, EvictionPolicy},
@@ -13,10 +15,7 @@ use sea_orm::{
 use serde::Serialize;
 use url::Url;
 
-use crate::{
-  db::group::GroupTable,
-  permissions::{CacheEdit, CacheView, Permission},
-};
+use crate::utils::{CacheEdit, CacheView};
 
 #[derive(Serialize, FromQueryResult, JsonSchema)]
 pub struct CacheInfo {
@@ -477,8 +476,8 @@ async fn apply_user_filter<Q: QueryFilter>(
   access_type: AccessType,
 ) -> Result<Q, DbErr> {
   let permission = match access_type {
-    AccessType::View => crate::permissions::CacheView::name(),
-    AccessType::Edit => crate::permissions::CacheEdit::name(),
+    AccessType::View => crate::utils::CacheView::name(),
+    AccessType::Edit => crate::utils::CacheEdit::name(),
   };
 
   let hash_general_permission = GroupTable::new(db)

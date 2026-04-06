@@ -81,11 +81,11 @@ import type {
   ListCachesData,
   ListCachesErrors,
   ListCachesResponses,
-  ListCachesSimple2Data,
-  ListCachesSimple2Errors,
-  ListCachesSimple2Responses,
   ListCachesSimpleData,
   ListCachesSimpleErrors,
+  ListCachesSimpleGroupData,
+  ListCachesSimpleGroupErrors,
+  ListCachesSimpleGroupResponses,
   ListCachesSimpleResponses,
   ListGroupsData,
   ListGroupsErrors,
@@ -109,10 +109,6 @@ import type {
   MailActiveResponses,
   NewCodeData,
   NewCodeResponses,
-  OidcCallbackData,
-  OidcCallbackErrors,
-  OidcUrlData,
-  OidcUrlErrors,
   ResetPasswordData,
   ResetPasswordErrors,
   ResetPasswordResponses,
@@ -168,9 +164,9 @@ import type {
   UploadPathData,
   UploadPathErrors,
   UploadPathResponses,
-  UserInfoData,
-  UserInfoErrors,
-  UserInfoResponses
+  UserInfoDetailData,
+  UserInfoDetailErrors,
+  UserInfoDetailResponses
 } from './types.gen';
 
 export type Options<
@@ -212,6 +208,14 @@ export const completeSetup = <ThrowOnError extends boolean = false>(
     }
   });
 
+export const testToken = <ThrowOnError extends boolean = false>(
+  options?: Options<TestTokenData, ThrowOnError>
+) =>
+  (options?.client ?? client).get<unknown, unknown, ThrowOnError>({
+    url: '/api/auth/test_token',
+    ...options
+  });
+
 export const key = <ThrowOnError extends boolean = false>(
   options?: Options<KeyData, ThrowOnError>
 ) =>
@@ -240,30 +244,6 @@ export const logout = <ThrowOnError extends boolean = false>(
     ...options
   });
 
-export const testToken = <ThrowOnError extends boolean = false>(
-  options?: Options<TestTokenData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<unknown, unknown, ThrowOnError>({
-    url: '/api/auth/test_token',
-    ...options
-  });
-
-export const oidcUrl = <ThrowOnError extends boolean = false>(
-  options?: Options<OidcUrlData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<unknown, OidcUrlErrors, ThrowOnError>({
-    url: '/api/auth/oidc/url',
-    ...options
-  });
-
-export const oidcCallback = <ThrowOnError extends boolean = false>(
-  options: Options<OidcCallbackData, ThrowOnError>
-) =>
-  (options.client ?? client).get<unknown, OidcCallbackErrors, ThrowOnError>({
-    url: '/api/auth/oidc/callback',
-    ...options
-  });
-
 export const authConfig = <ThrowOnError extends boolean = false>(
   options?: Options<AuthConfigData, ThrowOnError>
 ) =>
@@ -272,62 +252,6 @@ export const authConfig = <ThrowOnError extends boolean = false>(
     AuthConfigErrors,
     ThrowOnError
   >({ url: '/api/auth/config', ...options });
-
-export const updateAvatar = <ThrowOnError extends boolean = false>(
-  options: Options<UpdateAvatarData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
-    UpdateAvatarResponses,
-    UpdateAvatarErrors,
-    ThrowOnError
-  >({
-    url: '/api/user/account/avatar',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers
-    }
-  });
-
-export const updatePassword = <ThrowOnError extends boolean = false>(
-  options: Options<UpdatePasswordData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
-    UpdatePasswordResponses,
-    UpdatePasswordErrors,
-    ThrowOnError
-  >({
-    url: '/api/user/account/password',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers
-    }
-  });
-
-export const updateAccount = <ThrowOnError extends boolean = false>(
-  options: Options<UpdateAccountData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
-    UpdateAccountResponses,
-    UpdateAccountErrors,
-    ThrowOnError
-  >({
-    url: '/api/user/account/update',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers
-    }
-  });
-
-export const info = <ThrowOnError extends boolean = false>(
-  options?: Options<InfoData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<InfoResponses, InfoErrors, ThrowOnError>({
-    url: '/api/user/info',
-    ...options
-  });
 
 export const deleteUser = <ThrowOnError extends boolean = false>(
   options: Options<DeleteUserData, ThrowOnError>
@@ -386,15 +310,6 @@ export const editUser = <ThrowOnError extends boolean = false>(
     }
   });
 
-export const userInfo = <ThrowOnError extends boolean = false>(
-  options: Options<UserInfoData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
-    UserInfoResponses,
-    UserInfoErrors,
-    ThrowOnError
-  >({ url: '/api/user/management/{uuid}', ...options });
-
 export const mailActive = <ThrowOnError extends boolean = false>(
   options?: Options<MailActiveData, ThrowOnError>
 ) =>
@@ -412,15 +327,6 @@ export const listGroupsSimple = <ThrowOnError extends boolean = false>(
     ListGroupsSimpleErrors,
     ThrowOnError
   >({ url: '/api/user/management/groups', ...options });
-
-export const listCachesSimple = <ThrowOnError extends boolean = false>(
-  options?: Options<ListCachesSimpleData, ThrowOnError>
-) =>
-  (options?.client ?? client).get<
-    ListCachesSimpleResponses,
-    ListCachesSimpleErrors,
-    ThrowOnError
-  >({ url: '/api/user/management/caches', ...options });
 
 export const resetUserAvatar = <ThrowOnError extends boolean = false>(
   options: Options<ResetUserAvatarData, ThrowOnError>
@@ -452,6 +358,80 @@ export const resetUserPassword = <ThrowOnError extends boolean = false>(
       'Content-Type': 'application/json',
       ...options.headers
     }
+  });
+
+export const userInfoDetail = <ThrowOnError extends boolean = false>(
+  options: Options<UserInfoDetailData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    UserInfoDetailResponses,
+    UserInfoDetailErrors,
+    ThrowOnError
+  >({ url: '/api/user/management/{uuid}', ...options });
+
+export const listCachesSimple = <ThrowOnError extends boolean = false>(
+  options?: Options<ListCachesSimpleData, ThrowOnError>
+) =>
+  (options?.client ?? client).get<
+    ListCachesSimpleResponses,
+    ListCachesSimpleErrors,
+    ThrowOnError
+  >({ url: '/api/user/management/caches', ...options });
+
+export const updateAvatar = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateAvatarData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    UpdateAvatarResponses,
+    UpdateAvatarErrors,
+    ThrowOnError
+  >({
+    url: '/api/user/account/avatar',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers
+    }
+  });
+
+export const updatePassword = <ThrowOnError extends boolean = false>(
+  options: Options<UpdatePasswordData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    UpdatePasswordResponses,
+    UpdatePasswordErrors,
+    ThrowOnError
+  >({
+    url: '/api/user/account/password',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers
+    }
+  });
+
+export const updateAccount = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateAccountData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    UpdateAccountResponses,
+    UpdateAccountErrors,
+    ThrowOnError
+  >({
+    url: '/api/user/account/update',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers
+    }
+  });
+
+export const info = <ThrowOnError extends boolean = false>(
+  options?: Options<InfoData, ThrowOnError>
+) =>
+  (options?.client ?? client).get<InfoResponses, InfoErrors, ThrowOnError>({
+    url: '/api/user/info',
+    ...options
   });
 
 export const getGeneralSettings = <ThrowOnError extends boolean = false>(
@@ -629,12 +609,12 @@ export const listUsersSimple = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({ url: '/api/group/users', ...options });
 
-export const listCachesSimple2 = <ThrowOnError extends boolean = false>(
-  options?: Options<ListCachesSimple2Data, ThrowOnError>
+export const listCachesSimpleGroup = <ThrowOnError extends boolean = false>(
+  options?: Options<ListCachesSimpleGroupData, ThrowOnError>
 ) =>
   (options?.client ?? client).get<
-    ListCachesSimple2Responses,
-    ListCachesSimple2Errors,
+    ListCachesSimpleGroupResponses,
+    ListCachesSimpleGroupErrors,
     ThrowOnError
   >({ url: '/api/group/caches', ...options });
 

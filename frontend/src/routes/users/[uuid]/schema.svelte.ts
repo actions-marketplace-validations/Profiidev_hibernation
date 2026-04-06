@@ -1,4 +1,4 @@
-import type { CacheMapping, UserEditReq, UserInfo2 } from '$lib/client';
+import type { CacheMapping, UserEditReq, DetailUserInfo } from '$lib/client';
 import type { FormValue } from 'positron-components/components/form/types';
 import { z } from 'zod';
 
@@ -20,7 +20,9 @@ export const reformatData = (
   };
 };
 
-export const formatData = (user: UserInfo2): FormValue<typeof userSettings> => {
+export const formatData = (
+  user: DetailUserInfo
+): FormValue<typeof userSettings> => {
   return {
     name: user.name,
     groups: user.groups.map((group) => group.uuid)
