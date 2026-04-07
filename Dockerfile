@@ -49,6 +49,7 @@ FROM ghcr.io/profiidev/images/rust-gnu-builder:main AS backend-builder
 ARG TARGET
 ARG RUSTFLAGS
 ARG FRONTEND_DIR
+ARG FRONTEND_URL
 
 COPY --from=backend-planner /app/recipe.json .
 
@@ -76,8 +77,6 @@ RUN \
   && mv ../target/$TARGET/release/backend ../app
 
 FROM node:24-alpine
-
-ARG FRONTEND_DIR
 
 ENV DB_URL="sqlite:/data/hibernation.db?mode=rwc"
 ENV STORAGE_PATH="/data/storage"
