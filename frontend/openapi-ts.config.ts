@@ -18,7 +18,11 @@ export default defineConfig({
       name: '@hey-api/transformers',
       bigInt: false
     },
-    '@hey-api/client-fetch'
+    {
+      name: '@hey-api/client-fetch',
+      runtimeConfigPath: '$lib/backend/config',
+      baseUrl: ''
+    }
   ],
   logs: './build'
 });
