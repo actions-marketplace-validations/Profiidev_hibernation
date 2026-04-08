@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         with:
           token: ${{ secrets.PERSONAL_TOKEN }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
 
       - name: Create tag
         run: |
