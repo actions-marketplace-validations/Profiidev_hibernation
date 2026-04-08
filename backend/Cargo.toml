@@ -51,7 +51,7 @@ async-compression = { version = "0.4.41", features = ["tokio", "zstd"] }
 sha2 = "0.11.0"
 tokio-util = { version = "0.7.18", features = ["io"] }
 aws-config = { version = "1.8.15", features = ["behavior-version-latest"] }
-aws-sdk-s3 = { version = "1.128.0", features = ["behavior-version-latest"] }
+aws-sdk-s3 = { version = "1.129.0", features = ["behavior-version-latest"] }
 regex = "1.12.3"
 aide = { version = "0.16.0-alpha.3", features = [
   "axum",
