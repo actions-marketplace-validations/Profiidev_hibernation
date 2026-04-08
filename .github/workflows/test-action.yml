@@ -16,7 +16,7 @@ jobs:
           - latest
     name: Test Setup Action on ${{ matrix.os }} with version ${{ matrix.version }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - name: Setup Cli
         uses: ./
         with:
