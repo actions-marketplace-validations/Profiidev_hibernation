@@ -42,7 +42,7 @@ jobs:
           FULL_IMAGE_NAME="${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.item.image }}"
           echo "IMAGE=$(echo $FULL_IMAGE_NAME | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 

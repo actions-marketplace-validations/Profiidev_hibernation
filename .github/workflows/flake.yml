@@ -16,7 +16,7 @@ jobs:
           - ubuntu-24.04-arm
           - macos-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - uses: cachix/install-nix-action@v31
       - name: Install Hibernation CLI
         uses: profiidev/hibernation@v0
