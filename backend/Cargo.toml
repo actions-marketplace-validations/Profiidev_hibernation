@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 harmonia-store-core = { git = "https://github.com/nix-community/harmonia", rev = "harmonia-v3.0.0" }
 shared = { path = "../shared" }
-centaurus = { version = "0.8.0", features = [
+centaurus = { version = "0.9.1", features = [
   "sea-orm",
   "uuid",
   "hmac",
@@ -21,7 +21,7 @@ centaurus = { version = "0.8.0", features = [
   "image",
   "gravatar",
 ] }
-uuid = { version = "1.23.0", features = ["v4"] }
+uuid = { version = "1.23.1", features = ["v4"] }
 entity = { path = "entity" }
 migration = { path = "migration" }
 sea-orm = { version = "1.1.20", features = [
@@ -29,31 +29,31 @@ sea-orm = { version = "1.1.20", features = [
   "sqlx-sqlite",
   "runtime-tokio-rustls",
 ] }
-axum = { version = "0.8.8", features = ["macros", "ws", "tracing"] }
-axum-extra = { version = "0.12.5", features = ["cookie", "typed-header"] }
+axum = { version = "0.8.9", features = ["macros", "ws", "tracing"] }
+axum-extra = { version = "0.12.6", features = ["cookie", "typed-header"] }
 tracing = "0.1.44"
-tokio = { version = "1.51.0", features = ["signal"] }
+tokio = { version = "1.52.1", features = ["signal"] }
 http = "1.4.0"
 dotenvy = "0.15.7"
 serde = { version = "1.0.228", features = ["derive"] }
 figment = { version = "0.10.19", features = ["env"] }
 futures-util = "0.3.32"
 chrono = "0.4.44"
-rand = "0.10.0"
-reqwest = { version = "0.13.2", features = ["json", "form", "http3"] }
+rand = "0.10.1"
+reqwest = { version = "0.13.3", features = ["json", "form", "http3"] }
 time = "0.3.47"
 url = { version = "2.5.8", features = ["serde"] }
 tower_governor = { version = "0.8.0", features = [
   "axum",
 ], default-features = false }
 dashmap = "6.1.0"
-async-compression = { version = "0.4.41", features = ["tokio", "zstd"] }
+async-compression = { version = "0.4.42", features = ["tokio", "zstd"] }
 sha2 = "0.11.0"
 tokio-util = { version = "0.7.18", features = ["io"] }
-aws-config = { version = "1.8.15", features = ["behavior-version-latest"] }
-aws-sdk-s3 = { version = "1.128.0", features = ["behavior-version-latest"] }
+aws-config = { version = "1.8.16", features = ["behavior-version-latest"] }
+aws-sdk-s3 = { version = "1.131.0", features = ["behavior-version-latest"] }
 regex = "1.12.3"
-aide = { version = "0.16.0-alpha.3", features = [
+aide = { version = "0.16.0-alpha.4", features = [
   "axum",
   "axum-json",
   "axum-tokio",
